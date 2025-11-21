@@ -1,43 +1,32 @@
-// expo_app/services/firebase.js (UPDATED)
-import { initializeApp } from 'firebase/app';
-// UPDATED IMPORTS for modern auth setup
-import { getAuth, connectAuthEmulator, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-// NEW: Import AsyncStorage to persist auth state
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; 
+// expo_app/services/firebase.js
 
-let app, auth, db, storage;
+// ... imports ...
 
 export function initFirebase(config) {
-  if (!app) {
-    app = initializeApp(config);
+  if (!app) {
+    app = initializeApp(config);
 
-    // --- NEW/UPDATED AUTH INITIALIZATION ---
-    try {
-      auth = initializeAuth(app, {
-        persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-      });
-    } catch (e) {
-      // Handle case where initializeAuth might be called multiple times in fast refresh
-      console.warn("Firebase Auth already initialized, getting existing instance.");
-      auth = getAuth(app);
-    }
+    // ... auth init ...
 
-    db = getFirestore(app);
-    storage = getStorage(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
 
-    if (__DEV__) {
-      // If you run emulator locally and test on a device, replace 'localhost' with your machine IP
-      try {
-        connectFirestoreEmulator(db, 'localhost', 8080);
-        connectAuthEmulator(auth, 'http://localhost:9099');
-        connectStorageEmulator(storage, 'localhost', 9199);
-      } catch (e) {
-        console.log('Emulator connect skipped', e.message);
-      }
-    }
-  }
+    if (__DEV__) {
+      try {
+        // REPLACE '192.168.X.X' WITH YOUR ACTUAL IP FROM STEP 1
+        const machineIp = '192.168.86.22'; // <--- CHANGE THIS VALUE
+
+        connectFirestoreEmulator(db, machineIp, 8080);
+        // Note: Auth emulator usually requires the full URL with http://
+        connectAuthEmulator(auth, `http://${machineIp}:9099`); 
+        connectStorageEmulator(storage, machineIp, 9199);
+        
+        console.log('Connected to local emulators at', machineIp);
+      } catch (e) {
+        console.log('Emulator connect skipped', e.message);
+      }
+    }
+  }
 }
 
 export { auth, db, storage };
