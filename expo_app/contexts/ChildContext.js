@@ -1,27 +1,26 @@
 // expo_app/contexts/ChildContext.js
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-// 1. Create the Context
-const ChildContext = createContext();
+const ChildContext = createContext({
+  selectedChild: null,
+  selectChild: () => {}
+});
 
-// 2. Create the Provider Component
 export function ChildProvider({ children }) {
-  // State to hold the selected child's data
-  const [selectedChild, setSelectedChild] = useState(null); // { id: string, name: string }
+  const [selectedChild, setSelectedChild] = useState(null);
 
-  const selectChild = (childData) => {
-    // If null is passed, deselect (e.g., on sign-out)
-    setSelectedChild(childData);
-  };
+  function selectChild(child) {
+    // child is either null or { id, name }
+    setSelectedChild(child || null);
+  }
 
-  return (
-    <ChildContext.Provider value={{ selectedChild, selectChild }}>
-      {children}
-    </ChildContext.Provider>
-  );
+  return (
+    <ChildContext.Provider value={{ selectedChild, selectChild }}>
+      {children}
+    </ChildContext.Provider>
+  );
 }
 
-// 3. Create a Custom Hook for easy consumption
 export function useChild() {
-  return useContext(ChildContext);
+  return useContext(ChildContext);
 }
