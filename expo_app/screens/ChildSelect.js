@@ -4,6 +4,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, S
 import { auth, db } from '../services/firebase';
 import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
+import { Colors } from '../constants/Colors';
 
 export default function ChildSelect({ navigation }) {
   const [children, setChildren] = useState([]);
@@ -113,84 +114,83 @@ export default function ChildSelect({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  headerContainer: { 
-    padding: 24, 
-    paddingTop: 40,
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0'
-  },
-  greeting: { fontSize: 14, color: '#7F8C8D', fontWeight: '600' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#2C3E50' },
-  signOutBtn: { padding: 8 },
-  signOutText: { color: '#E74C3C', fontWeight: '600' },
+  container: { flex: 1, backgroundColor: Colors.background }, // Use background constant
+  headerContainer: { 
+    padding: 24, 
+    paddingTop: 40,
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    backgroundColor: Colors.card, // Use card constant
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.background // Lighter separation
+  },
+  greeting: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
+  title: { fontSize: 28, fontWeight: 'bold', color: Colors.textPrimary },
+  signOutBtn: { padding: 10, backgroundColor: Colors.danger + '20', borderRadius: 10 }, // Red background for contrast
+  signOutText: { color: Colors.danger, fontWeight: '700', fontSize: 14 },
 
-  listContent: { padding: 20 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#95A5A6', fontSize: 16 },
+  listContent: { padding: 20 },
+  emptyText: { textAlign: 'center', marginTop: 50, color: Colors.textSecondary, fontSize: 16 },
 
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    // Shadows
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatarText: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
-  cardInfo: { flex: 1 },
-  cardName: { fontSize: 18, fontWeight: '700', color: '#34495E' },
-  cardAction: { fontSize: 12, color: '#4A90E2', marginTop: 4 },
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 20, // More rounded for junior app
+    padding: 20, // Large padding
+    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1, // Softer shadow
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  avatar: {
+    width: 60, // Larger avatar
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  avatarText: { color: Colors.card, fontSize: 26, fontWeight: 'bold' },
+  cardInfo: { flex: 1 },
+  cardName: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary }, // Bigger name
+  cardAction: { fontSize: 14, color: Colors.primary, marginTop: 4, fontWeight: '600' }, // Primary color for action
 
-  addContainer: {
-    padding: 20,
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  addNewBtn: {
-    backgroundColor: '#2ECC71',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  addNewText: { color: '#FFF', fontSize: 16, fontWeight: 'bold' },
-  
-  inputRow: { flexDirection: 'row', alignItems: 'center' },
-  input: { 
-    flex: 1, 
-    backgroundColor: '#F5F7FA', 
-    padding: 12, 
-    borderRadius: 8, 
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0'
-  },
-  addConfirmBtn: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginRight: 8
-  },
-  addConfirmText: { color: '#FFF', fontWeight: 'bold' },
-  cancelBtn: { padding: 10 },
-  cancelText: { color: '#95A5A6', fontWeight: 'bold', fontSize: 16 }
+  addContainer: {
+    padding: 20,
+    backgroundColor: Colors.card,
+    borderTopWidth: 1,
+    borderTopColor: Colors.background,
+  },
+  addNewBtn: {
+    backgroundColor: Colors.primary, // Use primary color
+    borderRadius: 16, // Larger button radius
+    padding: 20, // Large touch target
+    alignItems: 'center',
+  },
+  addNewText: { color: Colors.card, fontSize: 18, fontWeight: 'bold' },
+  
+  inputRow: { flexDirection: 'row', alignItems: 'center' },
+  input: { 
+    flex: 1, 
+    backgroundColor: Colors.background, 
+    padding: 15, 
+    borderRadius: 10, 
+    marginRight: 10,
+    borderWidth: 2,
+    borderColor: Colors.secondary // Highlighting input field
+  },
+  addConfirmBtn: {
+    backgroundColor: Colors.progress, // Blue for confirmation
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginRight: 8
+  },
+  addConfirmText: { color: Colors.card, fontWeight: 'bold' },
+  cancelBtn: { padding: 10 },
+  cancelText: { color: Colors.textSecondary, fontWeight: 'bold', fontSize: 18 }
 });
