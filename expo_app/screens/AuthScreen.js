@@ -1,148 +1,132 @@
 // expo_app/screens/AuthScreen.js
+
 import React, { useState } from 'react';
-import { View, TextInput, Text, Alert, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, Text, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
+import { Colors } from '../constants/Colors'; 
 
 export default function AuthScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  async function handleAction(isSignUp) {
-    if (!email || !password) {
-      Alert.alert('Missing Fields', 'Please enter both email and password.');
-      return;
-    }
-    setLoading(true);
-    try {
-      if (isSignUp) {
-        const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        Alert.alert('Success', `Welcome, ${cred.user.email}!`);
-      } else {
-        await signInWithEmailAndPassword(auth, email.trim(), password);
-      }
-    } catch (e) {
-      Alert.alert('Authentication Error', e.message);
-    } finally {
+  // === FIX: The handleAuth function required by the UI ===
+  async function handleAuth(authFunction) {
+    setLoading(true);
+    try {
+      // Use the provided Firebase auth function (signIn or createUser)
+      await authFunction(auth, email.trim(), password);
+      Alert.alert('Success', `${isLogin ? 'Signed in.' : 'Account created! You can now add your child.'}`);
+    } catch (e) {
+      Alert.alert('Authentication Error', e.message);
+    } finally {
       setLoading(false);
     }
-  }
+  }
+  // =======================================================
 
-  return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <View style={styles.contentContainer}>
-        <Text style={styles.logoText}>BrightSteps</Text>
-        <Text style={styles.tagline}>Learning made simple.</Text>
-        
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email Address"
-            placeholderTextColor="#A0A0A0"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#A0A0A0"
-            secureTextEntry={true}
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.emoji}>🔒</Text>
+      <Text style={styles.header}>Parent Login</Text>
+      <Text style={styles.subHeader}>Welcome to BrightSteps Junior. Please sign in to manage your child's learning profile.</Text>
 
-        <TouchableOpacity 
-          style={styles.primaryButton} 
-          onPress={() => handleAction(false)}
+      <TextInput 
+          style={styles.input} 
+          placeholder="Email Address" 
+          keyboardType="email-address" 
+          value={email} 
+          onChangeText={setEmail}
+          placeholderTextColor={Colors.textSecondary}
+      />
+      <TextInput 
+          style={styles.input} 
+          placeholder="Password" 
+          secureTextEntry 
+          value={password} 
+          onChangeText={setPassword} 
+          placeholderTextColor={Colors.textSecondary}
+      />
+
+      <TouchableOpacity 
+          style={[styles.button, { backgroundColor: Colors.primary }]}
+          onPress={() => handleAuth(isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword)}
           disabled={loading}
-        >
-          <Text style={styles.primaryButtonText}>{loading ? 'Please wait...' : 'Sign In'}</Text>
-        </TouchableOpacity>
+      >
+        <Text style={styles.buttonText}>{loading ? 'Authenticating...' : isLogin ? 'Sign In' : 'Create Parent Account'}</Text>
+      </TouchableOpacity>
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>OR</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity 
-          style={styles.secondaryButton} 
-          onPress={() => handleAction(true)}
-          disabled={loading}
-        >
-          <Text style={styles.secondaryButtonText}>Create New Account</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
-  );
+      <TouchableOpacity 
+          style={styles.switchButton}
+          onPress={() => setIsLogin(prev => !prev)}
+      >
+          <Text style={styles.switchText}>
+              {isLogin ? "Need an account? Sign Up" : "Have an account? Go to Sign In"}
+          </Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  contentContainer: { flex: 1, justifyContent: 'center', padding: 24 },
-  
-  logoText: { 
-    fontSize: 36, 
+  container: {
+    flexGrow: 1, 
+    padding: 30, 
+    justifyContent: 'center', 
+    backgroundColor: Colors.background
+},
+  emoji: { fontSize: 60, textAlign: 'center', marginBottom: 20, color: Colors.progress },
+  header: {
+    fontSize: 32, 
     fontWeight: '800', 
-    color: '#4A90E2', 
-    textAlign: 'center',
-    marginBottom: 8 
-  },
-  tagline: {
-    fontSize: 16,
-    color: '#7F8C8D',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  
-  inputContainer: { marginBottom: 20 },
-  input: { 
-    backgroundColor: '#FFFFFF', 
+    marginBottom: 8, 
+    textAlign: 'center', 
+    color: Colors.textPrimary
+},
+  subHeader: {
+    fontSize: 14, 
+    marginBottom: 40, 
+    textAlign: 'center', 
+    color: Colors.textSecondary,
+    paddingHorizontal: 10,
+},
+  input: {
+    borderWidth: 2, 
+    borderColor: Colors.secondary, 
     borderRadius: 12, 
-    padding: 16, 
-    fontSize: 16, 
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E1E8ED',
-    // Shadows
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-
-  primaryButton: {
-    backgroundColor: '#4A90E2',
-    borderRadius: 12,
-    paddingVertical: 16,
+    padding: 18, 
+    marginBottom: 15, 
+    backgroundColor: Colors.card,
+    fontSize: 16,
+    fontWeight: '600'
+},
+  button: {
+    padding: 20, 
+    borderRadius: 15,
     alignItems: 'center',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  primaryButtonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
-
-  dividerContainer: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#D1D1D1' },
-  dividerText: { marginHorizontal: 10, color: '#7F8C8D', fontWeight: '600' },
-
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 12,
+    marginTop: 15,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+},
+  buttonText: {
+    color: Colors.card,
+    fontSize: 20,
+    fontWeight: 'bold',
+},
+  switchButton: {
+    marginTop: 25,
+    padding: 10,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#4A90E2',
-    borderRadius: 12,
   },
-  secondaryButtonText: { color: '#4A90E2', fontSize: 16, fontWeight: '700' },
+  switchText: {
+    color: Colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+    textDecorationLine: 'underline'
+  }
 });
