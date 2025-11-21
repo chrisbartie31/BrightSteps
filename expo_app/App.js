@@ -1,5 +1,7 @@
+// expo_app/App.js (Final Production Version)
+
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -7,17 +9,16 @@ import { initFirebase, auth } from './services/firebase';
 import { firebaseConfig } from './services/firebaseConfig';
 import { ChildProvider } from './contexts/ChildContext';
 
+// Import your screens
 import AuthScreen from './screens/AuthScreen';
 import ChildSelect from './screens/ChildSelect';
 import LessonsList from './screens/LessonsList';
 import LessonDetail from './screens/LessonDetail';
 
+// Initialize Firebase
 initFirebase(firebaseConfig);
 
 const Stack = createNativeStackNavigator();
-
-// helper to coerce boolean from string
-const safeBool = v => v === true || v === 'true';
 
 export default function App() {
   const [initializing, setInitializing] = useState(true);
@@ -31,6 +32,7 @@ export default function App() {
     return unsubscribe;
   }, [initializing]);
 
+  // 1. Loading State
   if (initializing) {
     return (
       <View style={styles.loadingContainer}>
@@ -39,6 +41,7 @@ export default function App() {
     );
   }
 
+  // 2. Unauthenticated State (Login/Signup)
   if (!user) {
     return (
       <NavigationContainer>
@@ -53,13 +56,14 @@ export default function App() {
     );
   }
 
+  // 3. Authenticated State (The Main App)
   return (
     <ChildProvider>
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
             headerShown: true,
-            gestureEnabled: true,
+            // gestureEnabled removed to prevent crashes
           }}
         >
           <Stack.Screen
