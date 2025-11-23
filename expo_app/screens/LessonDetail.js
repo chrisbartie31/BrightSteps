@@ -19,8 +19,11 @@ const LoadingView = () => (
 
 // Assuming SafeVideo is either expo-av's Video or a wrapper around it
 const SafeVideo = (props) => {
-    // Replace this with the actual Video component import if needed.
-    return <View style={props.style}><Text style={{color: '#FFF'}}>Video Player Placeholder</Text></View> 
+    return (
+        <View style={props.style}>
+            <Text style={{color: '#FFF'}}>Video Player Placeholder</Text>
+        </View>
+    );
 };
 
 
