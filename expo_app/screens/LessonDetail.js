@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   
   contentArea: { flex: 1, justifyContent: 'center' },
   mediaPlayer: { width: '100%', height: '100%', backgroundColor: 'black' },
-  webView: { flex: 1 },
+  webView: { flex: 1, backgroundColor: Colors.background },
   errorText: { color: Colors.card, marginBottom: 10 },
 
   openButton: { backgroundColor: Colors.progress, padding: 15, borderRadius: 10 },

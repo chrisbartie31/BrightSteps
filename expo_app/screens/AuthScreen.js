@@ -29,55 +29,62 @@ export default function AuthScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.emoji}>🔒</Text>
-      <Text style={styles.header}>Parent Login</Text>
-      <Text style={styles.subHeader}>Welcome to BrightSteps Junior. Please sign in to manage your child's learning profile.</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.emoji}>👋</Text>
+        <Text style={styles.header}>Welcome to BrightSteps!</Text>
+        <Text style={styles.subHeader}>Let's get a grown-up to sign in.</Text>
+      </View>
 
-      <TextInput 
-          style={styles.input} 
-          placeholder="Email Address" 
-          keyboardType="email-address" 
-          value={email} 
-          onChangeText={setEmail}
-          placeholderTextColor={Colors.textSecondary}
-      />
-      <TextInput 
-          style={styles.input} 
-          placeholder="Password" 
-          secureTextEntry 
-          value={password} 
-          onChangeText={setPassword} 
-          placeholderTextColor={Colors.textSecondary}
-      />
+      <View style={styles.formContainer}>
+        <TextInput 
+            style={styles.input} 
+            placeholder="Grown-up's Email" 
+            keyboardType="email-address" 
+            value={email} 
+            onChangeText={setEmail}
+            placeholderTextColor={Colors.textSecondary}
+        />
+        <TextInput 
+            style={styles.input}
+            placeholder="Secret Password" 
+            secureTextEntry 
+            value={password} 
+            onChangeText={setPassword} 
+            placeholderTextColor={Colors.textSecondary}
+        />
 
-      <TouchableOpacity 
-          style={[styles.button, { backgroundColor: Colors.primary }]}
-          onPress={() => handleAuth(isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword)}
-          disabled={loading}
-      >
-        <Text style={styles.buttonText}>{loading ? 'Authenticating...' : isLogin ? 'Sign In' : 'Create Parent Account'}</Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+            style={[styles.button, { backgroundColor: Colors.primary }]}
+            onPress={() => handleAuth(isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword)}
+            disabled={loading}
+        >
+          <Text style={styles.buttonText}>{loading ? 'Checking...' : isLogin ? "Let's Go! 🚀" : 'Create Account'}</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity 
-          style={styles.switchButton}
-          onPress={() => setIsLogin(prev => !prev)}
-      >
-          <Text style={styles.switchText}>
-              {isLogin ? "Need an account? Sign Up" : "Have an account? Go to Sign In"}
-          </Text>
-      </TouchableOpacity>
+        <TouchableOpacity 
+            style={styles.switchButton}
+            onPress={() => setIsLogin(prev => !prev)}
+        >
+            <Text style={styles.switchText}>
+                {isLogin ? "Need a new account? Tap here!" : "Already have an account? Sign In"}
+            </Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1, 
-    padding: 30, 
+    flexGrow: 1,
     justifyContent: 'center', 
-    backgroundColor: Colors.background
+    backgroundColor: Colors.secondary + '15' // Light yellow background
 },
-  emoji: { fontSize: 60, textAlign: 'center', marginBottom: 20, color: Colors.progress },
+  headerContainer: {
+    padding: 30,
+    alignItems: 'center',
+  },
+  emoji: { fontSize: 60, marginBottom: 10 },
   header: {
     fontSize: 32, 
     fontWeight: '800', 
@@ -88,17 +95,25 @@ const styles = StyleSheet.create({
   subHeader: {
     fontSize: 14, 
     marginBottom: 40, 
-    textAlign: 'center', 
     color: Colors.textSecondary,
-    paddingHorizontal: 10,
+  },
+  formContainer: {
+    backgroundColor: Colors.card,
+    marginHorizontal: 20,
+    padding: 25,
+    borderRadius: 25,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
 },
   input: {
-    borderWidth: 2, 
-    borderColor: Colors.secondary, 
+    backgroundColor: Colors.card,
     borderRadius: 12, 
     padding: 18, 
     marginBottom: 15, 
-    backgroundColor: Colors.card,
+    borderWidth: 2,
+    borderColor: Colors.background,
     fontSize: 16,
     fontWeight: '600'
 },
@@ -106,7 +121,7 @@ const styles = StyleSheet.create({
     padding: 20, 
     borderRadius: 15,
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 10,
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
