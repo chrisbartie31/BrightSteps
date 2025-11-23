@@ -1,15 +1,14 @@
-// expo_app/screens/ChildSelect.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, SafeAreaView, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, Modal, StatusBar } from 'react-native';
 import { auth, db } from '../services/firebase';
 import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors';
 
 export default function ChildSelect({ navigation }) {
-  const [children, setChildren] = useState([]); // This will still hold just the children data
+  const [children, setChildren] = useState([]);
   const [newName, setNewName] = useState('');
-  const [isAdding, setIsAdding] = useState(false); // Toggle for "Add" mode
+  const [isAdding, setIsAdding] = useState(false);
   const { selectChild } = useChild();
 
   useEffect(() => {
@@ -22,10 +21,7 @@ export default function ChildSelect({ navigation }) {
   }, []);
 
   async function addChild() {
-    if (!newName.trim()) {
-      Alert.alert('Required', 'Please enter a name');
-      return;
-    }
+    if (!newName.trim()) return;
     await addDoc(collection(db, 'children'), { 
       name: newName.trim(), 
       parentId: auth.currentUser.uid, 
@@ -45,23 +41,21 @@ export default function ChildSelect({ navigation }) {
     auth.signOut();
   }
 
-  // Generate a nice initial for the avatar
   const getInitial = (name) => name ? name.charAt(0).toUpperCase() : '?';
-  // Generate a random-ish color based on name length (simple trick)
   const getColor = (name) => {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD'];
+    const colors = [Colors.primary, Colors.pink, Colors.mint, Colors.orange, Colors.secondary];
     return colors[name.length % colors.length];
   }
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Simplified Header */}
       <View style={styles.headerContainer}>
-        <View>
-          <Text style={styles.greeting}>Hello there!</Text>
-          <Text style={styles.title}>Who is learning?</Text>
-        </View>
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
-          <Text style={styles.signOutText}>Log Out</Text>
+        <Text style={styles.headerTitle}>Select Profile</Text>
+        <TouchableOpacity onPress={handleSignOut}>
+          <Text style={styles.headerAction}>Log Out</Text>
         </TouchableOpacity>
       </View>
 
@@ -69,169 +63,137 @@ export default function ChildSelect({ navigation }) {
         data={children}
         keyExtractor={i => i.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => {
-          return (
-            <TouchableOpacity style={styles.card} onPress={() => handleSelectChild(item)}>
-              <View style={[styles.avatar, { backgroundColor: getColor(item.name) }]}>
-                <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
-              </View>
-              <Text style={styles.cardName}>{item.name}</Text>
-              <View style={styles.goButton}>
-                <Text style={styles.goButtonText}>➔</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => (
+          <TouchableOpacity 
+            style={styles.card} 
+            onPress={() => handleSelectChild(item)} 
+            activeOpacity={0.7}
+          >
+            <View style={[styles.avatar, { backgroundColor: getColor(item.name) }]}>
+              <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
+            </View>
+            
+            <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
+            
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
+        )}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No learners added yet. Tap below to start!</Text>
+          <View style={styles.emptyContainer}>
+             <Text style={styles.emptyText}>No profiles yet.</Text>
+          </View>
         }
       />
 
-      {/* Modal for Adding a New Child */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isAdding}
-        onRequestClose={() => setIsAdding(false)}
-      >
-        <View style={styles.modalContainer}>
+      {/* Simple Circular FAB */}
+      <TouchableOpacity style={styles.fab} onPress={() => setIsAdding(true)}>
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
+
+      {/* Minimal Modal */}
+      <Modal animationType="fade" transparent={true} visible={isAdding} onRequestClose={() => setIsAdding(false)}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add a New Learner</Text>
+            <Text style={styles.modalTitle}>New Learner</Text>
             <TextInput
-              style={styles.input}
-              placeholder="What's their name?"
+              style={styles.modalInput}
+              placeholder="Name"
               value={newName}
               onChangeText={setNewName}
-              placeholderTextColor={Colors.textSecondary}
               autoFocus
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.modalButton, styles.cancelBtn]} onPress={() => setIsAdding(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, styles.addConfirmBtn]} onPress={addChild}>
-                <Text style={styles.addConfirmText}>Add</Text>
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.modalBtn} onPress={() => setIsAdding(false)}>
+                    <Text style={styles.btnTextCancel}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalBtn} onPress={addChild}>
+                    <Text style={styles.btnTextAdd}>Add</Text>
+                </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-
-      {/* Floating Action Button to Add Child */}
-      <TouchableOpacity style={styles.fab} onPress={() => setIsAdding(true)}>
-        <Text style={styles.fabIcon}>+</Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  headerContainer: { 
-    padding: 24, 
-    paddingTop: 40,
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    backgroundColor: Colors.card, // Use card constant
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.background // Lighter separation
-  },
-  greeting: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
-  title: { fontSize: 28, fontWeight: 'bold', color: Colors.textPrimary },
-  signOutBtn: { padding: 10, backgroundColor: Colors.danger, borderRadius: 10 },
-  signOutText: { color: Colors.background, fontWeight: '700', fontSize: 14 },
-
-  listContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: Colors.textSecondary, fontSize: 16 },
-
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 20,
+  container: { flex: 1, backgroundColor: Colors.background },
+  
+  // Header
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
     flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  avatarText: { color: Colors.card, fontSize: 28, fontWeight: 'bold' },
-  cardName: { flex: 1, fontSize: 22, fontWeight: '800', color: Colors.textPrimary },
-  goButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.primary + '20',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: Colors.background,
   },
-  goButtonText: { fontSize: 20, color: Colors.primary, fontWeight: 'bold' },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary },
+  headerAction: { fontSize: 16, fontWeight: '600', color: Colors.danger },
 
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    width: '85%',
+  listContent: { padding: 20 },
+
+  // Simple, Clean Card
+  card: {
     backgroundColor: Colors.card,
-    borderRadius: 20,
-    padding: 25,
+    borderRadius: 16, // Moderate rounding
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
     alignItems: 'center',
+    // Very subtle shadow for lift
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: Colors.textPrimary,
-    marginBottom: 20,
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
   },
-  input: { 
-    width: '100%',
-    backgroundColor: Colors.background, 
-    padding: 15, 
-    borderRadius: 12, 
-    borderWidth: 2,
-    borderColor: Colors.secondary,
-    fontSize: 16,
-    marginBottom: 25,
-  },
-  modalActions: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
-  modalButton: { flex: 1, padding: 15, borderRadius: 12, alignItems: 'center' },
-  cancelBtn: { backgroundColor: Colors.background, marginRight: 10 },
-  cancelText: { color: Colors.textSecondary, fontWeight: 'bold', fontSize: 16 },
-  addConfirmBtn: {
-    backgroundColor: Colors.primary,
-  },
-  addConfirmText: { color: Colors.card, fontWeight: 'bold', fontSize: 16 },
+  avatarText: { fontSize: 22, fontWeight: '700', color: '#FFF' },
+  
+  cardName: { flex: 1, fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
+  chevron: { fontSize: 28, color: '#C7C7CC', fontWeight: '300', marginTop: -2 },
 
-  // Floating Action Button
+  // FAB
   fab: {
     position: 'absolute',
-    bottom: 40,
-    right: 30,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#000',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 5,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  fabIcon: { color: Colors.card, fontSize: 32, fontWeight: 'bold', lineHeight: 34 },
+  fabIcon: { fontSize: 32, color: '#FFF', marginTop: -2 },
+
+  // Modal
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalContent: { width: 280, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: 20, alignItems: 'center' },
+  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 15 },
+  modalInput: { width: '100%', backgroundColor: Colors.inputBackground, padding: 10, borderRadius: 8, fontSize: 16, marginBottom: 20 },
+  modalActions: { flexDirection: 'row', width: '100%', justifyContent: 'space-between' },
+  modalBtn: { flex: 1, alignItems: 'center', padding: 10 },
+  btnTextCancel: { color: Colors.textSecondary, fontSize: 16, fontWeight: '600' },
+  btnTextAdd: { color: Colors.primary, fontSize: 16, fontWeight: '700' },
+
+  emptyContainer: { alignItems: 'center', marginTop: 50 },
+  emptyText: { color: Colors.textSecondary, fontSize: 16 },
 });

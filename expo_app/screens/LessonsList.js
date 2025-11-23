@@ -1,7 +1,5 @@
-// expo_app/screens/LessonsList.js
-
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, SafeAreaView, LayoutAnimation, UIManager, Platform } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, SafeAreaView, LayoutAnimation, UIManager, Platform, StatusBar } from 'react-native';
 import { db } from '../services/firebase';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
@@ -9,7 +7,6 @@ import { Colors } from '../constants/Colors';
 
 export default function LessonsList({ navigation }) {
     const [lessons, setLessons] = useState([]);
-    // CHANGE: progress is now an object { lessonId: 0.5 } (0 to 1 scale)
     const [progressMap, setProgressMap] = useState({}); 
     const [loading, setLoading] = useState(true);
     const { selectedChild } = useChild();
@@ -36,16 +33,13 @@ export default function LessonsList({ navigation }) {
              setLoading(false);
         });
 
-        // 2. Listen to Progress
         const progressQ = query(collection(db, 'progress'), where('childId', '==', childId));
         const progressUnsub = onSnapshot(progressQ, snap => {
              const newMap = {};
              snap.docs.forEach(d => {
                  const data = d.data();
-                 // Store progress (0 to 1). If 'completed' is true, force 1 (100%)
                  newMap[data.lessonId] = data.completed ? 1 : (data.progress || 0);
              });
-             
              setProgressMap(newMap);
              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         });
@@ -64,39 +58,50 @@ export default function LessonsList({ navigation }) {
     );
 
     const renderItem = ({ item }) => {
-        // Get progress (defaults to 0)
         const itemProgress = progressMap[item.id] || 0; 
-        const isCompleted = itemProgress >= 1; // Considered done if 100%
+        const isCompleted = itemProgress >= 1; 
         const isVideo = item.type === 'video';
-        
-        const icon = isVideo ? '▶️' : '📖';
+        const percentDisplay = Math.round(itemProgress * 100);
         
         return (
             <TouchableOpacity 
-                style={[styles.card, isCompleted && styles.cardCompleted]} 
+                style={styles.card} 
                 onPress={() => navigation.navigate('LessonDetail', { lesson: item })}
-                activeOpacity={0.8}
+                activeOpacity={0.9} 
             >
-                {isCompleted && <Text style={styles.completedBanner}>DONE! 🎉</Text>}
-                <View style={[styles.iconContainer, { backgroundColor: isVideo ? '#A78BFA' : '#FBBF24' }]}>
-                    <Text style={styles.iconText}>{icon}</Text>
+                <View style={styles.cardInner}>
+                    {/* Icon Column */}
+                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.mint + '15' }]}>
+                        <Text style={styles.iconText}>{isVideo ? '▶️' : '📄'}</Text>
+                    </View>
+
+                    {/* Text Column */}
+                    <View style={styles.textContainer}>
+                        <View style={styles.headerRow}>
+                            <Text style={[styles.tag, { color: isVideo ? Colors.secondary : Colors.mint }]}>
+                                {isVideo ? 'WATCH' : 'READ'}
+                            </Text>
+                            
+                            {/* --- STATUS INDICATOR --- */}
+                            {isCompleted ? (
+                                <Text style={styles.checkMark}>✓</Text>
+                            ) : itemProgress > 0 ? (
+                                <Text style={styles.percentText}>{percentDisplay}%</Text>
+                            ) : null}
+                            {/* ------------------------ */}
+                        </View>
+                        <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                    </View>
                 </View>
                 
-                <View style={styles.infoContainer}>
-                    <Text style={styles.lessonTitle}>{item.title}</Text>
-                    
-                    {/* PROGRESS BAR */}
-                    <View style={styles.progressBarContainer}>
-                        <View style={[
-                            styles.progressBar, 
-                            // Convert 0-1 to 0%-100%
-                            { width: `${Math.min(itemProgress * 100, 100)}%` } 
-                        ]} />
-                    </View>
-                    
-                    <Text style={styles.lessonMeta}>
-                        {isCompleted ? 'Great job!' : itemProgress > 0 ? `${Math.round(itemProgress * 100)}% Complete` : 'Tap to start'}
-                    </Text>
+                {/* Chunky Progress Bar */}
+                <View style={styles.progressWrapper}>
+                   <View style={styles.track}>
+                      <View style={[
+                          styles.fill, 
+                          { width: `${Math.min(itemProgress * 100, 100)}%`, backgroundColor: isCompleted ? Colors.success : Colors.primary }
+                      ]} />
+                   </View>
                 </View>
             </TouchableOpacity>
         );
@@ -104,9 +109,10 @@ export default function LessonsList({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Let's Learn, {selectedChild?.name || 'Student'}!</Text>
-                <Text style={styles.subHeader}>Pick a lesson to get started</Text>
+            <StatusBar barStyle="dark-content" />
+            <View style={styles.headerContainer}>
+                <Text style={styles.dateTitle}>TODAY'S LESSONS</Text>
+                <Text style={styles.largeTitle}>Hi, {selectedChild?.name || 'Student'}!</Text>
             </View>
 
             <FlatList
@@ -116,8 +122,8 @@ export default function LessonsList({ navigation }) {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyEmoji}>😴</Text>
-                        <Text style={styles.emptyText}>No Lessons!</Text>
+                        <Text style={styles.emptyEmoji}>🦄</Text>
+                        <Text style={styles.emptyText}>All caught up!</Text>
                     </View>
                 }
             />
@@ -126,80 +132,55 @@ export default function LessonsList({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.secondary + '15' },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    
-    header: { paddingHorizontal: 25, paddingVertical: 20, backgroundColor: Colors.card },
-    headerTitle: { fontSize: 28, fontWeight: '900', color: Colors.textPrimary, marginBottom: 4 }, 
-    subHeader: { fontSize: 16, color: Colors.textSecondary, fontWeight: '500' },
-    
-    listContent: { padding: 20 },
+  container: { flex: 1, backgroundColor: Colors.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  
+  headerContainer: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 10 },
+  dateTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginBottom: 4, letterSpacing: 1 },
+  largeTitle: { fontSize: 32, fontWeight: '900', color: Colors.textPrimary },
 
-    // Card Styles
-    card: {
-        backgroundColor: Colors.card,
-        borderRadius: 20, 
-        padding: 16,
-        marginBottom: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 }, 
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 5,
-        borderWidth: 2,
-        borderColor: Colors.card,
-        overflow: 'hidden',
-    },
-    cardCompleted: {
-        borderColor: Colors.primary,
-        backgroundColor: Colors.primary + '0A',
-    },
-    completedBanner: {
-        position: 'absolute',
-        top: 12,
-        right: -35,
-        backgroundColor: Colors.primary,
-        color: Colors.card,
-        paddingHorizontal: 30,
-        paddingVertical: 4,
-        fontWeight: 'bold',
-        fontSize: 12,
-        transform: [{ rotate: '45deg' }],
-        elevation: 6,
-        zIndex: 1,
-    },
+  listContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 },
 
-    iconContainer: {
-        width: 60, 
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    iconText: { fontSize: 28 }, 
+  // Apple "Arcade" Card Style
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 22, 
+    padding: 18,
+    marginBottom: 18,
+    shadowColor: Colors.primary, 
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  cardInner: { flexDirection: 'row', marginBottom: 15 },
+  
+  iconBox: {
+      width: 56,
+      height: 56,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+  },
+  iconText: { fontSize: 24 },
 
-    infoContainer: { flex: 1 },
-    
-    lessonTitle: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, marginBottom: 8 }, 
-    
-    // Updated Progress Bar Styles
-    progressBarContainer: {
-        height: 10,
-        backgroundColor: '#E0E0E0', // Darker grey background for better contrast
-        borderRadius: 5,
-        overflow: 'hidden',
-        marginBottom: 4,
-    },
-    progressBar: { 
-        height: '100%', 
-        backgroundColor: Colors.primary,
-    },
-    lessonMeta: { fontSize: 13, color: Colors.textSecondary, fontWeight: '600' }, 
+  textContainer: { flex: 1, justifyContent: 'center' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  tag: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  
+  // New Text Styles
+  checkMark: { color: Colors.success, fontWeight: '900', fontSize: 16 },
+  percentText: { color: Colors.primary, fontWeight: '800', fontSize: 14 },
 
-    emptyState: { alignItems: 'center', marginTop: 80 },
-    emptyEmoji: { fontSize: 60, marginBottom: 10 },
-    emptyText: { fontSize: 24, fontWeight: '800', color: Colors.textPrimary },
+  cardTitle: { fontSize: 19, fontWeight: '800', color: Colors.textPrimary, lineHeight: 24 },
+
+  // Progress Bar
+  progressWrapper: { marginTop: 0 },
+  track: { height: 10, backgroundColor: Colors.inputBackground, borderRadius: 5 },
+  fill: { height: 10, borderRadius: 5 },
+
+  emptyState: { alignItems: 'center', marginTop: 60 },
+  emptyEmoji: { fontSize: 60, marginBottom: 10 },
+  emptyText: { fontSize: 18, color: Colors.textSecondary, fontWeight: '700' },
 });
