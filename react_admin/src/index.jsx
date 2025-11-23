@@ -1,256 +1,272 @@
-// react_admin/src/index.jsx
-import React, { useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from './firebase';
+import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom/client';
+import { initializeApp } from 'firebase/app';
+import { 
+  getStorage, 
+  ref, 
+  uploadBytesResumable, 
+  getDownloadURL, 
+  connectStorageEmulator 
+} from 'firebase/storage';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  serverTimestamp, 
+  connectFirestoreEmulator 
+} from 'firebase/firestore';
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  connectAuthEmulator 
+} from 'firebase/auth'; 
+import { firebaseConfig } from '../firebaseConfig';
 
-function AdminApp() {
-  const [title, setTitle] = useState('');
-  const [ageMin, setAgeMin] = useState('');
-  const [ageMax, setAgeMax] = useState('');
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+const db = getFirestore(app);
+const auth = getAuth(app); 
 
-  async function handleUpload() {
-    if (!file || !title) return alert("Please pick a file and title");
-    
-    setUploading(true);
-    try {
-      const storageRef = ref(storage, `lessons/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setProgress(p);
-        },
-        (error) => {
-          console.error(error);
-          alert("Upload failed! Check console.");
-          setUploading(false);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          const type = file.type.includes('pdf') ? 'pdf' : 'video';
-
-          await addDoc(collection(db, 'lessons'), {
-            title,
-            type,
-            fileUrl: downloadURL,
-            fileStoragePath: storageRef.fullPath,
-            ageRange: [Number(ageMin), Number(ageMax)],
-            createdAt: serverTimestamp()
-          });
-
-          alert("✅ Lesson Uploaded Successfully!");
-          setUploading(false);
-          setProgress(0);
-          setTitle('');
-          setFile(null);
-          setAgeMin('');
-          setAgeMax('');
-        }
-      );
-    } catch (err) {
-      console.error(err);
-      setUploading(false);
-    }
+// === 🔌 CONNECT TO EMULATORS (Local Development Only) ===
+// This ensures the Admin App talks to the same "Local Database" as your Expo App
+if (window.location.hostname === "localhost") {
+  console.log("👉 Admin App connecting to Local Emulators...");
+  try {
+    // Note: We use 'localhost' here because the browser is on the same machine
+    connectAuthEmulator(auth, "http://localhost:9099");
+    connectFirestoreEmulator(db, "localhost", 8080);
+    connectStorageEmulator(storage, "localhost", 9199);
+  } catch (e) {
+    console.log("Emulator connection skipped (already connected):", e.message);
   }
+}
+// ========================================================
 
-  return (
-    <div style={styles.pageContainer}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>BrightSteps Tutor 🎓</h1>
-          <p style={styles.subtitle}>Upload new lessons for your students</p>
-        </div>
+// --- Admin Login Component ---
+function AdminAuth() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-        <div style={styles.form}>
-          {/* Title Input */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Lesson Title</label>
+    async function handleSignIn() {
+        setLoading(true);
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (e) {
+            alert('Login Failed: ' + e.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    return (
+        <div style={{ maxWidth: 400, margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', background: '#f0f0f0', fontFamily: 'sans-serif' }}>
+            <h2 style={{ textAlign: 'center', color: '#333' }}>BrightSteps Admin</h2>
+            <p style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>Local Emulator Mode</p>
+            
             <input 
-              style={styles.input}
-              placeholder="e.g. Introduction to Counting" 
-              value={title} 
-              onChange={e => setTitle(e.target.value)} 
+                type="email" 
+                placeholder="Admin Email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                style={{ width: '100%', padding: '10px', marginBottom: '10px', boxSizing: 'border-box' }}
             />
-          </div>
-          
-          {/* Age Range Inputs */}
-          <div style={styles.row}>
-            <div style={{...styles.inputGroup, flex: 1}}>
-              <label style={styles.label}>Min Age</label>
-              <input 
-                style={styles.input} 
-                placeholder="5" 
-                value={ageMin} 
-                onChange={e => setAgeMin(e.target.value)} 
-                type="number" 
-              />
-            </div>
-            <div style={{...styles.inputGroup, flex: 1}}>
-              <label style={styles.label}>Max Age</label>
-              <input 
-                style={styles.input} 
-                placeholder="10" 
-                value={ageMax} 
-                onChange={e => setAgeMax(e.target.value)} 
-                type="number" 
-              />
-            </div>
-          </div>
-
-          {/* Custom File Input */}
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Lesson Content (Video or PDF)</label>
-            <label htmlFor="file-upload" style={styles.fileDropZone}>
-              {file ? (
-                <span style={{color: '#2ECC71', fontWeight: 'bold'}}>📄 {file.name}</span>
-              ) : (
-                <span style={{color: '#7F8C8D'}}>Click to select a file...</span>
-              )}
-              <input 
-                id="file-upload" 
-                type="file" 
-                onChange={e => setFile(e.target.files[0])} 
-                style={{display: 'none'}} 
-                accept="video/*,application/pdf"
-              />
-            </label>
-          </div>
-
-          {/* Progress Bar */}
-          {uploading && (
-            <div style={styles.progressBarContainer}>
-              <div style={{...styles.progressBarFill, width: `${progress}%`}}></div>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button 
-            onClick={handleUpload} 
-            disabled={uploading}
-            style={uploading ? styles.buttonDisabled : styles.button}
-          >
-            {uploading ? `Uploading... ${Math.round(progress)}%` : '🚀 Upload Lesson'}
-          </button>
+            <input 
+                type="password" 
+                placeholder="Password" 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                style={{ width: '100%', padding: '10px', marginBottom: '20px', boxSizing: 'border-box' }}
+            />
+            <button 
+                onClick={handleSignIn} 
+                disabled={loading}
+                style={{ width: '100%', padding: '12px', background: '#3498db', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+                {loading ? 'Logging In...' : 'Sign In'}
+            </button>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
 
-// --- STYLES ---
-const styles = {
-  pageContainer: {
-    minHeight: '100vh',
-    backgroundColor: '#F5F7FA',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    maxWidth: '500px',
-    padding: '40px',
-    borderRadius: '20px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '30px',
-  },
-  title: {
-    color: '#4A90E2',
-    margin: 0,
-    fontSize: '28px',
-    fontWeight: '800',
-  },
-  subtitle: {
-    color: '#7F8C8D',
-    margin: '8px 0 0 0',
-    fontSize: '16px',
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  row: {
-    display: 'flex',
-    gap: '15px',
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#34495E',
-  },
-  input: {
-    padding: '12px 15px',
-    fontSize: '16px',
-    border: '1px solid #E0E0E0',
-    borderRadius: '8px',
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  },
-  fileDropZone: {
-    border: '2px dashed #E0E0E0',
-    borderRadius: '12px',
-    padding: '30px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    backgroundColor: '#FAFAFA',
-    transition: 'all 0.2s',
-  },
-  button: {
-    padding: '16px',
-    backgroundColor: '#4A90E2',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(74, 144, 226, 0.3)',
-    transition: 'transform 0.1s',
-  },
-  buttonDisabled: {
-    padding: '16px',
-    backgroundColor: '#BDC3C7',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'not-allowed',
-  },
-  progressBarContainer: {
-    height: '8px',
-    backgroundColor: '#F0F0F0',
-    borderRadius: '4px',
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#2ECC71',
-    transition: 'width 0.3s ease',
-  },
-};
+// --- Main Content Upload Component ---
+function AdminAppContent({ user }) {
+    const [title, setTitle] = useState('');
+    const [ageMin, setAgeMin] = useState('');
+    const [ageMax, setAgeMax] = useState('');
+    const [appTarget, setAppTarget] = useState('junior'); 
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState(0); 
 
-const container = document.getElementById('root');
-if (container) {
-  const root = createRoot(container);
-  root.render(<AdminApp />);
-} else {
-  console.error("Failed to find root element");
+    function onFileChange(e) {
+        setFile(e.target.files[0]);
+    }
+
+    async function upload() {
+        if (!title.trim() || !file) {
+            return alert('Please add a title and choose a file.');
+        }
+        setUploading(true);
+        setProgress(0);
+
+        try {
+            // 1. Upload File
+            const sref = ref(storage, `lessons/${appTarget}/${Date.now()}_${file.name}`); 
+            const task = uploadBytesResumable(sref, file);
+
+            await new Promise((res, rej) => {
+                task.on('state_changed', 
+                    (snapshot) => {
+                        const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        setProgress(p); 
+                    }, 
+                    rej, 
+                    res
+                );
+            });
+
+            const url = await getDownloadURL(sref);
+            const ageRange = (ageMin && ageMax) ? [Number(ageMin), Number(ageMax)] : null;
+            
+            let lessonType = 'other';
+            if (file.type.includes('video')) {
+                lessonType = 'video';
+            } else if (file.type.includes('pdf')) {
+                lessonType = 'pdf';
+            }
+            
+            // 2. Add Firestore Document
+            await addDoc(collection(db, 'lessons'), {
+                title: title.trim(),
+                fileUrl: url,
+                fileStoragePath: sref.fullPath,
+                type: lessonType, 
+                ageRange,
+                appTarget: appTarget, 
+                createdBy: user.email, 
+                createdAt: serverTimestamp()
+            });
+
+            alert('Lesson Uploaded Successfully to Emulator!');
+            setTitle('');
+            setFile(null);
+            setAgeMin(''); setAgeMax('');
+            setProgress(0);
+
+        } catch (e) {
+            console.error(e);
+            alert('Upload failed: ' + e.message);
+        } finally {
+            setUploading(false);
+        }
+    }
+
+    function handleSignOut() {
+        signOut(auth);
+    }
+
+    return (
+        <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '15px', borderBottom: '1px solid #ccc' }}>
+                <h1 style={{ margin: 0, color: '#2c3e50' }}>BrightSteps Manager <span style={{fontSize:'12px', color:'#e67e22'}}>(Emulator Connected)</span></h1>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ marginRight: '15px', fontSize: '14px' }}>Logged in as: <b>{user.email}</b></span>
+                    <button 
+                        onClick={handleSignOut} 
+                        style={{ padding: '8px 15px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                    >
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+            
+            <div style={{ marginTop: '30px', maxWidth: 600, padding: '30px', border: '1px solid #e0e0e0', borderRadius: '12px', background: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ marginTop: 0 }}>Upload New Lesson</h3>
+                
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Title</label>
+                    <input value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Target App (Filtering)</label>
+                    <select value={appTarget} onChange={e => setAppTarget(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}>
+                        <option value="junior">BrightSteps Junior (Ages 5-10)</option>
+                        <option value="next">BrightSteps Next (Ages 11-18)</option>
+                    </select>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Age Range (Optional)</label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input 
+                            type="number" 
+                            placeholder="Min Age" 
+                            value={ageMin} 
+                            onChange={e => setAgeMin(e.target.value)} 
+                            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
+                        />
+                        <input 
+                            type="number" 
+                            placeholder="Max Age" 
+                            value={ageMax} 
+                            onChange={e => setAgeMax(e.target.value)} 
+                            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
+                        />
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Lesson File</label>
+                    <input type="file" onChange={onFileChange} />
+                </div>
+                
+                {uploading && (
+                    <div style={{ margin: '15px 0' }}>
+                        <progress value={progress} max="100" style={{ width: '100%', height: '15px' }} />
+                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#555' }}>{progress.toFixed(2)}% Uploaded</p>
+                    </div>
+                )}
+                
+                <button 
+                    onClick={upload} 
+                    disabled={uploading}
+                    style={{ width: '100%', padding: '15px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+                >
+                    {uploading ? 'Uploading...' : 'Upload Lesson'}
+                </button>
+            </div>
+        </div>
+    );
 }
+
+// --- Root App Component ---
+function AdminApp() {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, u => {
+            setUser(u);
+            setLoading(false);
+        });
+        return unsubscribe;
+    }, []);
+
+    if (loading) {
+        return <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'sans-serif' }}>Connecting to Admin Panel...</div>;
+    }
+
+    if (!user) {
+        return <AdminAuth />;
+    }
+
+    return <AdminAppContent user={user} />;
+}
+
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement); 
+root.render(React.createElement(AdminApp));

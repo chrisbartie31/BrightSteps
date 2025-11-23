@@ -11,6 +11,8 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Colors } from '../constants/Colors';
 import { useChild } from '../contexts/ChildContext'; // Get selected child context
 
+import SafeVideo from '../components/SafeVideo';
+
 const LoadingView = () => (
   <View style={styles.center}>
     <ActivityIndicator size="large" color={Colors.primary} />
@@ -18,13 +20,13 @@ const LoadingView = () => (
 );
 
 // Assuming SafeVideo is either expo-av's Video or a wrapper around it
-const SafeVideo = (props) => {
-    return (
-        <View style={props.style}>
-            <Text style={{color: '#FFF'}}>Video Player Placeholder</Text>
-        </View>
-    );
-};
+//const SafeVideo = (props) => {
+//    return (
+//        <View style={props.style}>
+//            <Text style={{color: '#FFF'}}>Video Player Placeholder</Text>
+//        </View>
+//    );
+//};
 
 
 export default function LessonDetail({ route, navigation }) {
@@ -37,28 +39,40 @@ export default function LessonDetail({ route, navigation }) {
   const [marking, setMarking] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
-    async function fetchUrl() {
-      try {
-        if (!lesson) return;
-        
-        let url = lesson.fileUrl;
-        if (lesson.fileStoragePath) {
-          const sref = ref(storage, lesson.fileStoragePath);
-          url = await getDownloadURL(sref);
-        }
-        
-        if (mounted) setFileUrl(url);
-      } catch (e) {
-        console.error(e);
-        Alert.alert('Error', 'Could not load file');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    fetchUrl();
-    return () => { mounted = false; };
-  }, [lesson]);
+    let mounted = true;
+    async function fetchUrl() {
+      try {
+        if (!lesson) return;
+        
+        // 1. Get raw URL
+        let url = lesson.fileUrl;
+        if (lesson.fileStoragePath && !url) {
+          const sref = ref(storage, lesson.fileStoragePath);
+          url = await getDownloadURL(sref);
+        }
+        
+        console.log("1. Original URL:", url); // Debug Log
+
+        // === 🛠️ THE FIX: USE YOUR SPECIFIC WIFI IP ===
+        if (url && url.includes('localhost')) {
+             // REPLACE 'localhost' with '192.168.86.22'
+             url = url.replace('localhost', '192.168.86.22'); 
+        }
+        // =============================================
+
+        console.log("2. Final URL:", url); // Debug Log
+
+        if (mounted) setFileUrl(url);
+      } catch (e) {
+        console.error(e);
+        Alert.alert('Error', 'Could not load file');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchUrl();
+    return () => { mounted = false; };
+  }, [lesson]);
 
   async function markDone() {
     if (!auth.currentUser || !childId || marking) return;

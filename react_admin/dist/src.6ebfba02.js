@@ -33256,7 +33256,44 @@ function registerCoreComponents(variant) {
  * @packageDocumentation
  */
 registerCoreComponents('');
-},{"@firebase/component":"node_modules/@firebase/component/dist/esm/index.esm2017.js","@firebase/logger":"node_modules/@firebase/logger/dist/esm/index.esm2017.js","@firebase/util":"node_modules/@firebase/util/dist/index.esm2017.js","idb":"node_modules/idb/build/index.js"}],"node_modules/@firebase/storage/dist/index.esm2017.js":[function(require,module,exports) {
+},{"@firebase/component":"node_modules/@firebase/component/dist/esm/index.esm2017.js","@firebase/logger":"node_modules/@firebase/logger/dist/esm/index.esm2017.js","@firebase/util":"node_modules/@firebase/util/dist/index.esm2017.js","idb":"node_modules/idb/build/index.js"}],"node_modules/firebase/app/dist/esm/index.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _app = require("@firebase/app");
+Object.keys(_app).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (key in exports && exports[key] === _app[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _app[key];
+    }
+  });
+});
+var name = "firebase";
+var version = "10.14.1";
+
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+(0, _app.registerVersion)(name, version, 'app');
+},{"@firebase/app":"node_modules/@firebase/app/dist/esm/index.esm2017.js"}],"node_modules/@firebase/storage/dist/index.esm2017.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -71984,44 +72021,7 @@ Object.keys(_firestore).forEach(function (key) {
     }
   });
 });
-},{"@firebase/firestore":"node_modules/@firebase/firestore/dist/index.esm2017.js"}],"node_modules/firebase/app/dist/esm/index.esm.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var _app = require("@firebase/app");
-Object.keys(_app).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _app[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _app[key];
-    }
-  });
-});
-var name = "firebase";
-var version = "10.14.1";
-
-/**
- * @license
- * Copyright 2020 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-(0, _app.registerVersion)(name, version, 'app');
-},{"@firebase/app":"node_modules/@firebase/app/dist/esm/index.esm2017.js"}],"node_modules/tslib/tslib.es6.js":[function(require,module,exports) {
+},{"@firebase/firestore":"node_modules/@firebase/firestore/dist/index.esm2017.js"}],"node_modules/tslib/tslib.es6.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -83915,22 +83915,15 @@ Object.keys(_auth).forEach(function (key) {
     }
   });
 });
-},{"@firebase/auth":"node_modules/firebase/node_modules/@firebase/auth/dist/esm2017/index.js"}],"src/firebase.js":[function(require,module,exports) {
+},{"@firebase/auth":"node_modules/firebase/node_modules/@firebase/auth/dist/esm2017/index.js"}],"firebaseConfig.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.storage = exports.db = exports.auth = void 0;
-var _app = require("firebase/app");
-var _storage = require("firebase/storage");
-var _firestore = require("firebase/firestore");
-var _auth = require("firebase/auth");
-// react_admin/src/firebase.js
-
-// We don't strictly need Auth for the MVP admin, but good to have
-
-var firebaseConfig = {
+exports.firebaseConfig = void 0;
+// react_admin/firebaseConfig.js
+var firebaseConfig = exports.firebaseConfig = {
   apiKey: "AIzaSyDhw7OHLrXbek8vFOATqhiF-prK6ZjWdvY",
   authDomain: "brightsteps-dev.firebaseapp.com",
   projectId: "brightsteps-dev",
@@ -83938,35 +83931,20 @@ var firebaseConfig = {
   messagingSenderId: "620619350148",
   appId: "1:620619350148:web:aa14ca2527424ac2a6c2d1"
 };
-var app = (0, _app.initializeApp)(firebaseConfig);
-var db = exports.db = (0, _firestore.getFirestore)(app);
-var storage = exports.storage = (0, _storage.getStorage)(app);
-var auth = exports.auth = (0, _auth.getAuth)(app);
-
-// CONNECT TO EMULATORS (Localhost is fine for web)
-if (window.location.hostname === "localhost") {
-  console.log("🔥 Connecting to Emulators...");
-  (0, _firestore.connectFirestoreEmulator)(db, 'localhost', 8080);
-  (0, _storage.connectStorageEmulator)(storage, 'localhost', 9199);
-  (0, _auth.connectAuthEmulator)(auth, "http://localhost:9099");
-}
-},{"firebase/app":"node_modules/firebase/app/dist/esm/index.esm.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","firebase/auth":"node_modules/firebase/auth/dist/esm/index.esm.js"}],"src/index.jsx":[function(require,module,exports) {
+},{}],"src/index.jsx":[function(require,module,exports) {
 "use strict";
 
 var _react = _interopRequireWildcard(require("react"));
-var _client = require("react-dom/client");
+var _client = _interopRequireDefault(require("react-dom/client"));
+var _app = require("firebase/app");
 var _storage = require("firebase/storage");
 var _firestore = require("firebase/firestore");
-var _firebase = require("./firebase");
+var _auth = require("firebase/auth");
+var _firebaseConfig = require("../firebaseConfig");
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
 function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
@@ -83974,304 +83952,480 @@ function _nonIterableRest() { throw new TypeError("Invalid attempt to destructur
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; } // react_admin/src/index.jsx
-function AdminApp() {
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+var app = (0, _app.initializeApp)(_firebaseConfig.firebaseConfig);
+var storage = (0, _storage.getStorage)(app);
+var db = (0, _firestore.getFirestore)(app);
+var auth = (0, _auth.getAuth)(app);
+
+// === 🔌 CONNECT TO EMULATORS (Local Development Only) ===
+// This ensures the Admin App talks to the same "Local Database" as your Expo App
+if (window.location.hostname === "localhost") {
+  console.log("👉 Admin App connecting to Local Emulators...");
+  try {
+    // Note: We use 'localhost' here because the browser is on the same machine
+    (0, _auth.connectAuthEmulator)(auth, "http://localhost:9099");
+    (0, _firestore.connectFirestoreEmulator)(db, "localhost", 8080);
+    (0, _storage.connectStorageEmulator)(storage, "localhost", 9199);
+  } catch (e) {
+    console.log("Emulator connection skipped (already connected):", e.message);
+  }
+}
+// ========================================================
+
+// --- Admin Login Component ---
+function AdminAuth() {
   var _useState = (0, _react.useState)(''),
     _useState2 = _slicedToArray(_useState, 2),
-    title = _useState2[0],
-    setTitle = _useState2[1];
+    email = _useState2[0],
+    setEmail = _useState2[1];
   var _useState3 = (0, _react.useState)(''),
     _useState4 = _slicedToArray(_useState3, 2),
-    ageMin = _useState4[0],
-    setAgeMin = _useState4[1];
-  var _useState5 = (0, _react.useState)(''),
+    password = _useState4[0],
+    setPassword = _useState4[1];
+  var _useState5 = (0, _react.useState)(false),
     _useState6 = _slicedToArray(_useState5, 2),
-    ageMax = _useState6[0],
-    setAgeMax = _useState6[1];
-  var _useState7 = (0, _react.useState)(null),
-    _useState8 = _slicedToArray(_useState7, 2),
-    file = _useState8[0],
-    setFile = _useState8[1];
-  var _useState9 = (0, _react.useState)(false),
-    _useState0 = _slicedToArray(_useState9, 2),
-    uploading = _useState0[0],
-    setUploading = _useState0[1];
-  var _useState1 = (0, _react.useState)(0),
-    _useState10 = _slicedToArray(_useState1, 2),
-    progress = _useState10[0],
-    setProgress = _useState10[1];
-  function handleUpload() {
-    return _handleUpload.apply(this, arguments);
+    loading = _useState6[0],
+    setLoading = _useState6[1];
+  function handleSignIn() {
+    return _handleSignIn.apply(this, arguments);
   }
-  function _handleUpload() {
-    _handleUpload = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-      var storageRef, uploadTask;
-      return _regenerator().w(function (_context2) {
-        while (1) switch (_context2.n) {
+  function _handleSignIn() {
+    _handleSignIn = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var _t;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
           case 0:
-            if (!(!file || !title)) {
+            setLoading(true);
+            _context.p = 1;
+            _context.n = 2;
+            return (0, _auth.signInWithEmailAndPassword)(auth, email, password);
+          case 2:
+            _context.n = 4;
+            break;
+          case 3:
+            _context.p = 3;
+            _t = _context.v;
+            alert('Login Failed: ' + _t.message);
+          case 4:
+            _context.p = 4;
+            setLoading(false);
+            return _context.f(4);
+          case 5:
+            return _context.a(2);
+        }
+      }, _callee, null, [[1, 3, 4, 5]]);
+    }));
+    return _handleSignIn.apply(this, arguments);
+  }
+  return /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      maxWidth: 400,
+      margin: '50px auto',
+      padding: '20px',
+      border: '1px solid #ccc',
+      borderRadius: '8px',
+      background: '#f0f0f0',
+      fontFamily: 'sans-serif'
+    }
+  }, /*#__PURE__*/_react.default.createElement("h2", {
+    style: {
+      textAlign: 'center',
+      color: '#333'
+    }
+  }, "BrightSteps Admin"), /*#__PURE__*/_react.default.createElement("p", {
+    style: {
+      textAlign: 'center',
+      color: '#666',
+      fontSize: '14px'
+    }
+  }, "Local Emulator Mode"), /*#__PURE__*/_react.default.createElement("input", {
+    type: "email",
+    placeholder: "Admin Email",
+    value: email,
+    onChange: function onChange(e) {
+      return setEmail(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '10px',
+      marginBottom: '10px',
+      boxSizing: 'border-box'
+    }
+  }), /*#__PURE__*/_react.default.createElement("input", {
+    type: "password",
+    placeholder: "Password",
+    value: password,
+    onChange: function onChange(e) {
+      return setPassword(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '10px',
+      marginBottom: '20px',
+      boxSizing: 'border-box'
+    }
+  }), /*#__PURE__*/_react.default.createElement("button", {
+    onClick: handleSignIn,
+    disabled: loading,
+    style: {
+      width: '100%',
+      padding: '12px',
+      background: '#3498db',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }
+  }, loading ? 'Logging In...' : 'Sign In'));
+}
+
+// --- Main Content Upload Component ---
+function AdminAppContent(_ref) {
+  var user = _ref.user;
+  var _useState7 = (0, _react.useState)(''),
+    _useState8 = _slicedToArray(_useState7, 2),
+    title = _useState8[0],
+    setTitle = _useState8[1];
+  var _useState9 = (0, _react.useState)(''),
+    _useState0 = _slicedToArray(_useState9, 2),
+    ageMin = _useState0[0],
+    setAgeMin = _useState0[1];
+  var _useState1 = (0, _react.useState)(''),
+    _useState10 = _slicedToArray(_useState1, 2),
+    ageMax = _useState10[0],
+    setAgeMax = _useState10[1];
+  var _useState11 = (0, _react.useState)('junior'),
+    _useState12 = _slicedToArray(_useState11, 2),
+    appTarget = _useState12[0],
+    setAppTarget = _useState12[1];
+  var _useState13 = (0, _react.useState)(null),
+    _useState14 = _slicedToArray(_useState13, 2),
+    file = _useState14[0],
+    setFile = _useState14[1];
+  var _useState15 = (0, _react.useState)(false),
+    _useState16 = _slicedToArray(_useState15, 2),
+    uploading = _useState16[0],
+    setUploading = _useState16[1];
+  var _useState17 = (0, _react.useState)(0),
+    _useState18 = _slicedToArray(_useState17, 2),
+    progress = _useState18[0],
+    setProgress = _useState18[1];
+  function onFileChange(e) {
+    setFile(e.target.files[0]);
+  }
+  function upload() {
+    return _upload.apply(this, arguments);
+  }
+  function _upload() {
+    _upload = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var sref, task, url, ageRange, lessonType, _t2;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            if (!(!title.trim() || !file)) {
               _context2.n = 1;
               break;
             }
-            return _context2.a(2, alert("Please pick a file and title"));
+            return _context2.a(2, alert('Please add a title and choose a file.'));
           case 1:
             setUploading(true);
-            try {
-              storageRef = (0, _storage.ref)(_firebase.storage, "lessons/".concat(Date.now(), "_").concat(file.name));
-              uploadTask = (0, _storage.uploadBytesResumable)(storageRef, file);
-              uploadTask.on('state_changed', function (snapshot) {
+            setProgress(0);
+            _context2.p = 2;
+            // 1. Upload File
+            sref = (0, _storage.ref)(storage, "lessons/".concat(appTarget, "/").concat(Date.now(), "_").concat(file.name));
+            task = (0, _storage.uploadBytesResumable)(sref, file);
+            _context2.n = 3;
+            return new Promise(function (res, rej) {
+              task.on('state_changed', function (snapshot) {
                 var p = snapshot.bytesTransferred / snapshot.totalBytes * 100;
                 setProgress(p);
-              }, function (error) {
-                console.error(error);
-                alert("Upload failed! Check console.");
-                setUploading(false);
-              }, /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-                var downloadURL, type;
-                return _regenerator().w(function (_context) {
-                  while (1) switch (_context.n) {
-                    case 0:
-                      _context.n = 1;
-                      return (0, _storage.getDownloadURL)(uploadTask.snapshot.ref);
-                    case 1:
-                      downloadURL = _context.v;
-                      type = file.type.includes('pdf') ? 'pdf' : 'video';
-                      _context.n = 2;
-                      return (0, _firestore.addDoc)((0, _firestore.collection)(_firebase.db, 'lessons'), {
-                        title: title,
-                        type: type,
-                        fileUrl: downloadURL,
-                        fileStoragePath: storageRef.fullPath,
-                        ageRange: [Number(ageMin), Number(ageMax)],
-                        createdAt: (0, _firestore.serverTimestamp)()
-                      });
-                    case 2:
-                      alert("✅ Lesson Uploaded Successfully!");
-                      setUploading(false);
-                      setProgress(0);
-                      setTitle('');
-                      setFile(null);
-                      setAgeMin('');
-                      setAgeMax('');
-                    case 3:
-                      return _context.a(2);
-                  }
-                }, _callee);
-              })));
-            } catch (err) {
-              console.error(err);
-              setUploading(false);
+              }, rej, res);
+            });
+          case 3:
+            _context2.n = 4;
+            return (0, _storage.getDownloadURL)(sref);
+          case 4:
+            url = _context2.v;
+            ageRange = ageMin && ageMax ? [Number(ageMin), Number(ageMax)] : null;
+            lessonType = 'other';
+            if (file.type.includes('video')) {
+              lessonType = 'video';
+            } else if (file.type.includes('pdf')) {
+              lessonType = 'pdf';
             }
-          case 2:
+
+            // 2. Add Firestore Document
+            _context2.n = 5;
+            return (0, _firestore.addDoc)((0, _firestore.collection)(db, 'lessons'), {
+              title: title.trim(),
+              fileUrl: url,
+              fileStoragePath: sref.fullPath,
+              type: lessonType,
+              ageRange: ageRange,
+              appTarget: appTarget,
+              createdBy: user.email,
+              createdAt: (0, _firestore.serverTimestamp)()
+            });
+          case 5:
+            alert('Lesson Uploaded Successfully to Emulator!');
+            setTitle('');
+            setFile(null);
+            setAgeMin('');
+            setAgeMax('');
+            setProgress(0);
+            _context2.n = 7;
+            break;
+          case 6:
+            _context2.p = 6;
+            _t2 = _context2.v;
+            console.error(_t2);
+            alert('Upload failed: ' + _t2.message);
+          case 7:
+            _context2.p = 7;
+            setUploading(false);
+            return _context2.f(7);
+          case 8:
             return _context2.a(2);
         }
-      }, _callee2);
+      }, _callee2, null, [[2, 6, 7, 8]]);
     }));
-    return _handleUpload.apply(this, arguments);
+    return _upload.apply(this, arguments);
+  }
+  function handleSignOut() {
+    (0, _auth.signOut)(auth);
   }
   return /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.pageContainer
+    style: {
+      fontFamily: 'sans-serif',
+      padding: '20px'
+    }
   }, /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.card
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.header
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingBottom: '15px',
+      borderBottom: '1px solid #ccc'
+    }
   }, /*#__PURE__*/_react.default.createElement("h1", {
-    style: styles.title
-  }, "BrightSteps Tutor \uD83C\uDF93"), /*#__PURE__*/_react.default.createElement("p", {
-    style: styles.subtitle
-  }, "Upload new lessons for your students")), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.form
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.inputGroup
+    style: {
+      margin: 0,
+      color: '#2c3e50'
+    }
+  }, "BrightSteps Manager ", /*#__PURE__*/_react.default.createElement("span", {
+    style: {
+      fontSize: '12px',
+      color: '#e67e22'
+    }
+  }, "(Emulator Connected)")), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/_react.default.createElement("span", {
+    style: {
+      marginRight: '15px',
+      fontSize: '14px'
+    }
+  }, "Logged in as: ", /*#__PURE__*/_react.default.createElement("b", null, user.email)), /*#__PURE__*/_react.default.createElement("button", {
+    onClick: handleSignOut,
+    style: {
+      padding: '8px 15px',
+      background: '#e74c3c',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer'
+    }
+  }, "Sign Out"))), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      marginTop: '30px',
+      maxWidth: 600,
+      padding: '30px',
+      border: '1px solid #e0e0e0',
+      borderRadius: '12px',
+      background: '#fff',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    }
+  }, /*#__PURE__*/_react.default.createElement("h3", {
+    style: {
+      marginTop: 0
+    }
+  }, "Upload New Lesson"), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      marginBottom: '15px'
+    }
   }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Lesson Title"), /*#__PURE__*/_react.default.createElement("input", {
-    style: styles.input,
-    placeholder: "e.g. Introduction to Counting",
+    style: {
+      display: 'block',
+      fontWeight: 'bold',
+      marginBottom: '5px'
+    }
+  }, "Title"), /*#__PURE__*/_react.default.createElement("input", {
     value: title,
     onChange: function onChange(e) {
       return setTitle(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '10px',
+      borderRadius: '4px',
+      border: '1px solid #ccc',
+      boxSizing: 'border-box'
     }
   })), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.row
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.inputGroup), {}, {
-      flex: 1
-    })
+    style: {
+      marginBottom: '15px'
+    }
   }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Min Age"), /*#__PURE__*/_react.default.createElement("input", {
-    style: styles.input,
-    placeholder: "5",
+    style: {
+      display: 'block',
+      fontWeight: 'bold',
+      marginBottom: '5px'
+    }
+  }, "Target App (Filtering)"), /*#__PURE__*/_react.default.createElement("select", {
+    value: appTarget,
+    onChange: function onChange(e) {
+      return setAppTarget(e.target.value);
+    },
+    style: {
+      width: '100%',
+      padding: '10px',
+      borderRadius: '4px',
+      border: '1px solid #ccc',
+      boxSizing: 'border-box'
+    }
+  }, /*#__PURE__*/_react.default.createElement("option", {
+    value: "junior"
+  }, "BrightSteps Junior (Ages 5-10)"), /*#__PURE__*/_react.default.createElement("option", {
+    value: "next"
+  }, "BrightSteps Next (Ages 11-18)"))), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      marginBottom: '15px'
+    }
+  }, /*#__PURE__*/_react.default.createElement("label", {
+    style: {
+      display: 'block',
+      fontWeight: 'bold',
+      marginBottom: '5px'
+    }
+  }, "Age Range (Optional)"), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      display: 'flex',
+      gap: '10px'
+    }
+  }, /*#__PURE__*/_react.default.createElement("input", {
+    type: "number",
+    placeholder: "Min Age",
     value: ageMin,
     onChange: function onChange(e) {
       return setAgeMin(e.target.value);
     },
-    type: "number"
-  })), /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.inputGroup), {}, {
-      flex: 1
-    })
-  }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Max Age"), /*#__PURE__*/_react.default.createElement("input", {
-    style: styles.input,
-    placeholder: "10",
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: '4px',
+      border: '1px solid #ccc'
+    }
+  }), /*#__PURE__*/_react.default.createElement("input", {
+    type: "number",
+    placeholder: "Max Age",
     value: ageMax,
     onChange: function onChange(e) {
       return setAgeMax(e.target.value);
     },
-    type: "number"
+    style: {
+      flex: 1,
+      padding: '10px',
+      borderRadius: '4px',
+      border: '1px solid #ccc'
+    }
   }))), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.inputGroup
+    style: {
+      marginBottom: '20px'
+    }
   }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Lesson Content (Video or PDF)"), /*#__PURE__*/_react.default.createElement("label", {
-    htmlFor: "file-upload",
-    style: styles.fileDropZone
-  }, file ? /*#__PURE__*/_react.default.createElement("span", {
     style: {
-      color: '#2ECC71',
-      fontWeight: 'bold'
+      display: 'block',
+      fontWeight: 'bold',
+      marginBottom: '5px'
     }
-  }, "\uD83D\uDCC4 ", file.name) : /*#__PURE__*/_react.default.createElement("span", {
-    style: {
-      color: '#7F8C8D'
-    }
-  }, "Click to select a file..."), /*#__PURE__*/_react.default.createElement("input", {
-    id: "file-upload",
+  }, "Lesson File"), /*#__PURE__*/_react.default.createElement("input", {
     type: "file",
-    onChange: function onChange(e) {
-      return setFile(e.target.files[0]);
-    },
+    onChange: onFileChange
+  })), uploading && /*#__PURE__*/_react.default.createElement("div", {
     style: {
-      display: 'none'
-    },
-    accept: "video/*,application/pdf"
-  }))), uploading && /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.progressBarContainer
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.progressBarFill), {}, {
-      width: "".concat(progress, "%")
-    })
-  })), /*#__PURE__*/_react.default.createElement("button", {
-    onClick: handleUpload,
+      margin: '15px 0'
+    }
+  }, /*#__PURE__*/_react.default.createElement("progress", {
+    value: progress,
+    max: "100",
+    style: {
+      width: '100%',
+      height: '15px'
+    }
+  }), /*#__PURE__*/_react.default.createElement("p", {
+    style: {
+      margin: '5px 0 0 0',
+      fontSize: '12px',
+      color: '#555'
+    }
+  }, progress.toFixed(2), "% Uploaded")), /*#__PURE__*/_react.default.createElement("button", {
+    onClick: upload,
     disabled: uploading,
-    style: uploading ? styles.buttonDisabled : styles.button
-  }, uploading ? "Uploading... ".concat(Math.round(progress), "%") : '🚀 Upload Lesson'))));
+    style: {
+      width: '100%',
+      padding: '15px',
+      background: '#2ecc71',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      fontSize: '16px'
+    }
+  }, uploading ? 'Uploading...' : 'Upload Lesson')));
 }
 
-// --- STYLES ---
-var styles = {
-  pageContainer: {
-    minHeight: '100vh',
-    backgroundColor: '#F5F7FA',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    maxWidth: '500px',
-    padding: '40px',
-    borderRadius: '20px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '30px'
-  },
-  title: {
-    color: '#4A90E2',
-    margin: 0,
-    fontSize: '28px',
-    fontWeight: '800'
-  },
-  subtitle: {
-    color: '#7F8C8D',
-    margin: '8px 0 0 0',
-    fontSize: '16px'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  row: {
-    display: 'flex',
-    gap: '15px'
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#34495E'
-  },
-  input: {
-    padding: '12px 15px',
-    fontSize: '16px',
-    border: '1px solid #E0E0E0',
-    borderRadius: '8px',
-    outline: 'none',
-    transition: 'border-color 0.2s'
-  },
-  fileDropZone: {
-    border: '2px dashed #E0E0E0',
-    borderRadius: '12px',
-    padding: '30px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    backgroundColor: '#FAFAFA',
-    transition: 'all 0.2s'
-  },
-  button: {
-    padding: '16px',
-    backgroundColor: '#4A90E2',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(74, 144, 226, 0.3)',
-    transition: 'transform 0.1s'
-  },
-  buttonDisabled: {
-    padding: '16px',
-    backgroundColor: '#BDC3C7',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'not-allowed'
-  },
-  progressBarContainer: {
-    height: '8px',
-    backgroundColor: '#F0F0F0',
-    borderRadius: '4px',
-    overflow: 'hidden'
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#2ECC71',
-    transition: 'width 0.3s ease'
+// --- Root App Component ---
+function AdminApp() {
+  var _useState19 = (0, _react.useState)(null),
+    _useState20 = _slicedToArray(_useState19, 2),
+    user = _useState20[0],
+    setUser = _useState20[1];
+  var _useState21 = (0, _react.useState)(true),
+    _useState22 = _slicedToArray(_useState21, 2),
+    loading = _useState22[0],
+    setLoading = _useState22[1];
+  (0, _react.useEffect)(function () {
+    var unsubscribe = (0, _auth.onAuthStateChanged)(auth, function (u) {
+      setUser(u);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+  if (loading) {
+    return /*#__PURE__*/_react.default.createElement("div", {
+      style: {
+        textAlign: 'center',
+        marginTop: '50px',
+        fontFamily: 'sans-serif'
+      }
+    }, "Connecting to Admin Panel...");
   }
-};
-var container = document.getElementById('root');
-if (container) {
-  var root = (0, _client.createRoot)(container);
-  root.render(/*#__PURE__*/_react.default.createElement(AdminApp, null));
-} else {
-  console.error("Failed to find root element");
+  if (!user) {
+    return /*#__PURE__*/_react.default.createElement(AdminAuth, null);
+  }
+  return /*#__PURE__*/_react.default.createElement(AdminAppContent, {
+    user: user
+  });
 }
-},{"react":"node_modules/react/index.js","react-dom/client":"node_modules/react-dom/client.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","./firebase":"src/firebase.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+var rootElement = document.getElementById('root');
+var root = _client.default.createRoot(rootElement);
+root.render(_react.default.createElement(AdminApp));
+},{"react":"node_modules/react/index.js","react-dom/client":"node_modules/react-dom/client.js","firebase/app":"node_modules/firebase/app/dist/esm/index.esm.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","firebase/auth":"node_modules/firebase/auth/dist/esm/index.esm.js","../firebaseConfig":"firebaseConfig.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -84296,7 +84450,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53098" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56070" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

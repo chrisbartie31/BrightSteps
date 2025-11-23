@@ -32,13 +32,13 @@ export default function AuthScreen() {
       <View style={styles.headerContainer}>
         <Text style={styles.emoji}>👋</Text>
         <Text style={styles.header}>Welcome to BrightSteps!</Text>
-        <Text style={styles.subHeader}>Let's get a grown-up to sign in.</Text>
+        <Text style={styles.subHeader}>Let's get a parent to sign in.</Text>
       </View>
 
       <View style={styles.formContainer}>
         <TextInput 
             style={styles.input} 
-            placeholder="Grown-up's Email" 
+            placeholder="Parent Email" 
             keyboardType="email-address" 
             value={email} 
             onChangeText={setEmail}
@@ -46,7 +46,7 @@ export default function AuthScreen() {
         />
         <TextInput 
             style={styles.input}
-            placeholder="Secret Password" 
+            placeholder="Password" 
             secureTextEntry 
             value={password} 
             onChangeText={setPassword} 
@@ -58,7 +58,7 @@ export default function AuthScreen() {
             onPress={() => handleAuth(isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword)}
             disabled={loading}
         >
-          <Text style={styles.buttonText}>{loading ? 'Checking...' : isLogin ? "Let's Go! 🚀" : 'Create Account'}</Text>
+          <Text style={styles.buttonText}>{loading ? 'Checking...' : isLogin ? "Login 🚀" : 'Create Account'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
