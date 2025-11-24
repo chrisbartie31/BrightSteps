@@ -29,13 +29,14 @@ if (window.location.hostname === "localhost") {
   }
 }
 
-// --- Admin Login ---
+// --- Admin Login Component (Premium UI) ---
 function AdminAuth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    async function handleSignIn() {
+    async function handleSignIn(e) {
+        e.preventDefault(); 
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password);
@@ -47,12 +48,49 @@ function AdminAuth() {
     }
 
     return (
-        <div style={styles.container}>
-            <div style={styles.card}>
-                <h2>BrightSteps Portal</h2>
-                <input style={styles.input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-                <input style={styles.input} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-                <button style={styles.btn} onClick={handleSignIn} disabled={loading}>Sign In</button>
+        <div style={authStyles.pageBackground}>
+            <div style={authStyles.loginCard}>
+                <div style={authStyles.header}>
+                    <h1 style={authStyles.title}>BrightSteps</h1>
+                    <p style={authStyles.subtitle}>Tutor & Au Pair Portal</p>
+                </div>
+                
+                <form onSubmit={handleSignIn} style={authStyles.form}>
+                    <div style={authStyles.inputGroup}>
+                        <label style={authStyles.label}>Email Address</label>
+                        <input 
+                            style={authStyles.input} 
+                            type="email" 
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                            placeholder="name@example.com"
+                            required
+                        />
+                    </div>
+                    
+                    <div style={authStyles.inputGroup}>
+                        <label style={authStyles.label}>Password</label>
+                        <input 
+                            style={authStyles.input} 
+                            type="password" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            placeholder="••••••••"
+                            required
+                        />
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        style={loading ? {...authStyles.button, opacity: 0.7, cursor: 'not-allowed'} : authStyles.button}
+                        disabled={loading}
+                    >
+                        {loading ? 'Signing In...' : 'Sign In'}
+                    </button>
+                </form>
+            </div>
+            <div style={authStyles.footer}>
+                &copy; {new Date().getFullYear()} BrightSteps Education
             </div>
         </div>
     );
@@ -63,7 +101,7 @@ function UploadTab({ user, students }) {
     const [title, setTitle] = useState('');
     const [appTarget, setAppTarget] = useState('junior');
     const [file, setFile] = useState(null);
-    const [selectedStudentIds, setSelectedStudentIds] = useState([]); // NEW: Assignment State
+    const [selectedStudentIds, setSelectedStudentIds] = useState([]); 
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0); 
 
@@ -78,7 +116,6 @@ function UploadTab({ user, students }) {
     async function upload() {
         if (!title.trim() || !file) return alert('Missing fields');
         
-        // If empty, it means "Public to All". If selected, specific assignment.
         const assignments = selectedStudentIds.length > 0 ? selectedStudentIds : null;
 
         setUploading(true);
@@ -97,7 +134,7 @@ function UploadTab({ user, students }) {
                 fileStoragePath: sref.fullPath,
                 type: lessonType, 
                 appTarget: appTarget, 
-                assignedStudentIds: assignments, // SAVE ASSIGNMENTS
+                assignedStudentIds: assignments, 
                 createdBy: user.email, 
                 createdAt: serverTimestamp()
             });
@@ -122,7 +159,6 @@ function UploadTab({ user, students }) {
                 <option value="next">BrightSteps Next (Ages 11-18)</option>
             </select>
 
-            {/* STUDENT ASSIGNMENT SECTION */}
             <label style={styles.label}>Assign to Student (Optional - Leave blank for all)</label>
             <div style={styles.checkboxContainer}>
                 {students.length === 0 && <p style={{fontSize:12, color:'#999'}}>No students found yet.</p>}
@@ -185,19 +221,15 @@ function AdminAppContent({ user }) {
     const [students, setStudents] = useState([]);
 
     useEffect(() => {
-        // 1. Fetch all users (parents) to build a lookup map
-        // Note: In a massive app, you wouldn't fetch ALL users at once, but for <1000 it's fine.
         async function fetchData() {
             const userSnapshot = await getDocs(collection(db, 'users'));
             const parentMap = {};
             userSnapshot.forEach(doc => {
                 const d = doc.data();
-                // Combine First/Last name or use email fallback
                 const fullName = d.firstName && d.lastName ? `${d.firstName} ${d.lastName}` : d.email;
                 parentMap[doc.id] = { name: fullName, phone: d.phone };
             });
 
-            // 2. Listen to Children and map the parent data
             const q = query(collection(db, 'children'));
             const unsub = onSnapshot(q, (snap) => {
                 const list = snap.docs.map(d => {
@@ -206,7 +238,7 @@ function AdminAppContent({ user }) {
                     return { 
                         id: d.id, 
                         ...data,
-                        parentName: parent.name, // Mapped Name
+                        parentName: parent.name, 
                         parentPhone: parent.phone 
                     };
                 });
@@ -219,8 +251,6 @@ function AdminAppContent({ user }) {
 
     return (
         <div style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', backgroundColor: '#f5f5f7', minHeight: '100vh'}}>
-            
-            {/* HEADER */}
             <div style={{background: '#fff', padding: '15px 30px', borderBottom: '1px solid #ddd', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                 <h1 style={{margin:0, fontSize: 20, color:'#1c1c1e'}}>BrightSteps Manager</h1>
                 <div>
@@ -229,23 +259,11 @@ function AdminAppContent({ user }) {
                 </div>
             </div>
 
-            {/* TABS */}
             <div style={{display:'flex', justifyContent:'center', padding: 20}}>
-                <button 
-                    onClick={() => setActiveTab('upload')}
-                    style={activeTab === 'upload' ? styles.tabActive : styles.tab}
-                >
-                    Upload Content
-                </button>
-                <button 
-                    onClick={() => setActiveTab('students')}
-                    style={activeTab === 'students' ? styles.tabActive : styles.tab}
-                >
-                    Students
-                </button>
+                <button onClick={() => setActiveTab('upload')} style={activeTab === 'upload' ? styles.tabActive : styles.tab}>Upload</button>
+                <button onClick={() => setActiveTab('students')} style={activeTab === 'students' ? styles.tabActive : styles.tab}>Students</button>
             </div>
 
-            {/* CONTENT */}
             <div style={{maxWidth: 800, margin: '0 auto', padding: 20}}>
                 {activeTab === 'upload' ? <UploadTab user={user} students={students} /> : <StudentsTab students={students} />}
             </div>
@@ -269,6 +287,7 @@ function AdminApp() {
     return <AdminAppContent user={user} />;
 }
 
+// --- STYLES ---
 const styles = {
     container: { display: 'flex', justifyContent: 'center', marginTop: 50, fontFamily: 'sans-serif' },
     card: { background: '#fff', padding: 30, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #e5e5ea' },
@@ -277,10 +296,40 @@ const styles = {
     btn: { background: '#007AFF', color: '#fff', border: 'none', padding: '12px', borderRadius: 8, cursor: 'pointer', fontWeight: '600' },
     tab: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#8e8e93', fontWeight: '600', borderBottom: '2px solid transparent' },
     tabActive: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#007AFF', fontWeight: '600', borderBottom: '2px solid #007AFF' },
-    
-    // Checkbox List Style
     checkboxContainer: { maxHeight: 200, overflowY: 'auto', border: '1px solid #ddd', padding: 10, borderRadius: 8, marginBottom: 15, background: '#f9f9f9' },
     checkboxItem: { padding: '8px 0', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center' }
+};
+
+// --- AUTH STYLES (PREMIUM LOGIN) ---
+const authStyles = {
+    pageBackground: {
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', 
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    },
+    loginCard: {
+        background: '#ffffff',
+        padding: '40px 50px',
+        borderRadius: '16px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.05), 0 2px 10px rgba(0,0,0,0.02)',
+        width: '100%',
+        maxWidth: '400px',
+        boxSizing: 'border-box',
+    },
+    header: { textAlign: 'center', marginBottom: '30px' },
+    title: { margin: 0, color: '#111827', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' },
+    subtitle: { margin: '5px 0 0', color: '#6B7280', fontSize: '15px', fontWeight: '500' },
+    form: { display: 'flex', flexDirection: 'column', gap: '20px' },
+    inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
+    label: { fontSize: '14px', fontWeight: '600', color: '#374151' },
+    input: { padding: '12px 16px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '16px', outline: 'none', width: '100%', boxSizing: 'border-box' },
+    button: { background: '#007AFF', color: 'white', padding: '14px', borderRadius: '8px', border: 'none', fontSize: '16px', fontWeight: '600', cursor: 'pointer', marginTop: '10px' },
+    footer: { marginTop: '20px', color: '#6B7280', fontSize: '12px' }
 };
 
 const rootElement = document.getElementById('root');
