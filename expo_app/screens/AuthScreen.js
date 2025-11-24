@@ -1,24 +1,97 @@
-// expo_app/screens/AuthScreen.js
-
 import React, { useState } from 'react';
-import { View, TextInput, Text, Alert, StyleSheet, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { 
+  View, 
+  TextInput, 
+  Text, 
+  Alert, 
+  StyleSheet, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  KeyboardAvoidingView, 
+  Platform, 
+  StatusBar, 
+  ScrollView,
+  ActivityIndicator
+} from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { doc, collection, writeBatch } from 'firebase/firestore'; // NEW IMPORTS
+import { auth, db } from '../services/firebase';
 import { Colors } from '../constants/Colors'; 
 
 export default function AuthScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Login State
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  async function handleAuth(authFunction) {
+  // Core Credentials
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Extended Profile Data (Sign Up Only)
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [childName, setChildName] = useState('');
+
+  // === HANDLER: SIGN IN ===
+  async function handleSignIn() {
     setLoading(true);
     try {
-      await authFunction(auth, email.trim(), password);
-      // Auth listener in App.js handles the rest
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      // App.js listener handles navigation
     } catch (e) {
-      Alert.alert('Action Failed', e.message);
+      Alert.alert('Login Failed', e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // === HANDLER: SIGN UP (Transactional) ===
+  async function handleSignUp() {
+    // 1. Validation
+    if (!email.trim() || !password || !firstName.trim() || !lastName.trim() || !phone.trim()) {
+      return Alert.alert("Missing Details", "Please fill in all parent details.");
+    }
+    if (!childName.trim()) {
+      return Alert.alert("Missing Child", "Please add the name of the first child you look after.");
+    }
+
+    setLoading(true);
+    try {
+      // 2. Create Auth User
+      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+      const uid = userCredential.user.uid;
+
+      // 3. Batch Write (Atomic Operation)
+      const batch = writeBatch(db);
+
+      // A. Create Parent/Au Pair Profile
+      const parentRef = doc(db, 'users', uid);
+      batch.set(parentRef, {
+        email: email.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        role: 'parent', // or 'au_pair', generic role for the account owner
+        createdAt: new Date()
+      });
+
+      // B. Create First Child Profile
+      const newChildRef = doc(collection(db, 'children')); // Auto-ID
+      batch.set(newChildRef, {
+        name: childName.trim(),
+        parentId: uid,
+        assignedTutorId: null, // Will be assigned by admin later
+        createdAt: new Date()
+      });
+
+      // 4. Commit to Database
+      await batch.commit();
+      
+      Alert.alert("Welcome!", "Account created successfully.");
+      
+    } catch (e) {
+      Alert.alert("Signup Error", e.message);
     } finally {
       setLoading(false);
     }
@@ -27,51 +100,104 @@ export default function AuthScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
-        
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>BrightSteps</Text>
-          <Text style={styles.headerSubtitle}>{isLogin ? 'Sign in to your account' : 'Create a new account'}</Text>
-        </View>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{flex: 1}}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerTitle}>BrightSteps</Text>
+            <Text style={styles.headerSubtitle}>
+              {isLogin ? 'Welcome back! Please sign in.' : 'Create a profile to start tracking progress.'}
+            </Text>
+          </View>
 
-        {/* iOS "Inset Grouped" Container */}
-        <View style={styles.inputGroup}>
-          <TextInput 
-            style={styles.inputTop} 
-            placeholder="Email" 
-            keyboardType="email-address" 
-            autoCapitalize="none"
-            value={email} 
-            onChangeText={setEmail}
-            placeholderTextColor={Colors.placeholder}
-          />
-          <View style={styles.separator} />
-          <TextInput 
-            style={styles.inputBottom}
-            placeholder="Password" 
-            secureTextEntry 
-            value={password} 
-            onChangeText={setPassword} 
-            placeholderTextColor={Colors.placeholder}
-          />
-        </View>
+          {/* === SIGN UP FORM === */}
+          {!isLogin && (
+            <>
+              <Text style={styles.sectionLabel}>YOUR DETAILS</Text>
+              <View style={styles.inputGroup}>
+                <TextInput 
+                  style={styles.inputTop} 
+                  placeholder="First Name" 
+                  value={firstName} 
+                  onChangeText={setFirstName}
+                  placeholderTextColor={Colors.placeholder}
+                />
+                <View style={styles.separator} />
+                <TextInput 
+                  style={styles.inputMiddle} 
+                  placeholder="Last Name" 
+                  value={lastName} 
+                  onChangeText={setLastName}
+                  placeholderTextColor={Colors.placeholder}
+                />
+                <View style={styles.separator} />
+                <TextInput 
+                  style={styles.inputBottom} 
+                  placeholder="Phone Number" 
+                  keyboardType="phone-pad"
+                  value={phone} 
+                  onChangeText={setPhone}
+                  placeholderTextColor={Colors.placeholder}
+                />
+              </View>
 
-        <TouchableOpacity 
-          style={styles.primaryButton}
-          onPress={() => handleAuth(isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword)}
-          disabled={loading}
-        >
-          <Text style={styles.primaryButtonText}>
-            {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
-          </Text>
-        </TouchableOpacity>
+              <Text style={styles.sectionLabel}>FIRST LEARNER</Text>
+              <View style={styles.inputGroup}>
+                <TextInput 
+                  style={styles.inputSingle} 
+                  placeholder="Child's Name" 
+                  value={childName} 
+                  onChangeText={setChildName}
+                  placeholderTextColor={Colors.placeholder}
+                />
+              </View>
+            </>
+          )}
 
-        <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.linkButton}>
-          <Text style={styles.linkText}>
-            {isLogin ? 'New here? Create Account' : 'Already have an account? Sign In'}
-          </Text>
-        </TouchableOpacity>
+          {/* === CREDENTIALS FORM === */}
+          <Text style={styles.sectionLabel}>{isLogin ? 'ACCOUNT' : 'LOGIN DETAILS'}</Text>
+          <View style={styles.inputGroup}>
+            <TextInput 
+              style={styles.inputTop} 
+              placeholder="Email Address" 
+              keyboardType="email-address" 
+              autoCapitalize="none"
+              value={email} 
+              onChangeText={setEmail}
+              placeholderTextColor={Colors.placeholder}
+            />
+            <View style={styles.separator} />
+            <TextInput 
+              style={styles.inputBottom}
+              placeholder="Password" 
+              secureTextEntry 
+              value={password} 
+              onChangeText={setPassword} 
+              placeholderTextColor={Colors.placeholder}
+            />
+          </View>
 
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={isLogin ? handleSignIn : handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {isLogin ? 'Sign In' : 'Create Account'}
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={styles.linkButton}>
+            <Text style={styles.linkText}>
+              {isLogin ? 'New here? Create Account' : 'Already have an account? Sign In'}
+            </Text>
+          </TouchableOpacity>
+
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -79,13 +205,22 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  keyboardView: { flex: 1, justifyContent: 'center', paddingHorizontal: 20 },
+  scrollContent: { padding: 20, paddingBottom: 50 },
   
-  headerContainer: { marginBottom: 30, alignItems: 'center' },
+  headerContainer: { marginTop: 20, marginBottom: 30, alignItems: 'center' },
   headerTitle: { fontSize: 34, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 17, color: Colors.textSecondary, marginTop: 5 },
+  headerSubtitle: { fontSize: 16, color: Colors.textSecondary, marginTop: 8, textAlign: 'center' },
 
-  // The "Apple Settings" Look
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: 8,
+    marginLeft: 16, // Apple Style Header Offset
+    textTransform: 'uppercase'
+  },
+
+  // Apple Style Grouped Inputs
   inputGroup: {
     backgroundColor: Colors.card,
     borderRadius: 12,
@@ -99,7 +234,21 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     backgroundColor: Colors.card,
   },
+  inputMiddle: {
+    height: 50,
+    paddingHorizontal: 16,
+    fontSize: 17,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.card,
+  },
   inputBottom: {
+    height: 50,
+    paddingHorizontal: 16,
+    fontSize: 17,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.card,
+  },
+  inputSingle: {
     height: 50,
     paddingHorizontal: 16,
     fontSize: 17,
@@ -109,13 +258,13 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: Colors.separator,
-    marginLeft: 16, // Standard iOS left inset for separators
+    marginLeft: 16, 
   },
 
   primaryButton: {
     backgroundColor: Colors.primary,
     borderRadius: 12,
-    height: 50,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: Colors.primary,
@@ -123,12 +272,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    marginTop: 10
   },
   primaryButtonText: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  linkButton: { marginTop: 20, alignItems: 'center' },
-  linkText: { color: Colors.primary, fontSize: 16 },
+  linkButton: { marginTop: 25, alignItems: 'center' },
+  linkText: { color: Colors.primary, fontSize: 16, fontWeight: '500' },
 });

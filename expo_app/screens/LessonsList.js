@@ -122,7 +122,7 @@ export default function LessonsList({ navigation }) {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyEmoji}>🦄</Text>
+                        <Text style={styles.emptyEmoji}>✅</Text>
                         <Text style={styles.emptyText}>All caught up!</Text>
                     </View>
                 }
