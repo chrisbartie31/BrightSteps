@@ -24,22 +24,22 @@ export function initFirebase(config) {
     db = getFirestore(app);
     storage = getStorage(app);
 
-    if (__DEV__) {
-      try {
-        // 3. YOUR COMPUTER IP ADDRESS
-        // Replace this with the IP you found via ipconfig (e.g., 192.168.1.5)
-        const machineIp = '192.168.86.22'; 
+    // if (__DEV__) {
+    //   try {
+    //     // 3. YOUR COMPUTER IP ADDRESS
+    //     // Replace this with the IP you found via ipconfig (e.g., 192.168.1.5)
+    //     const machineIp = '192.168.86.22'; 
 
-        connectFirestoreEmulator(db, machineIp, 8080);
-        connectAuthEmulator(auth, `http://${machineIp}:9099`); 
-        connectStorageEmulator(storage, machineIp, 9199);
+    //     connectFirestoreEmulator(db, machineIp, 8080);
+    //     connectAuthEmulator(auth, `http://${machineIp}:9099`); 
+    //     connectStorageEmulator(storage, machineIp, 9199);
         
-        console.log('Connected to local emulators at', machineIp);
-      } catch (e) {
-        console.log('Emulator connect skipped', e.message);
-      }
+    //     console.log('Connected to local emulators at', machineIp);
+    //   } catch (e) {
+    //     console.log('Emulator connect skipped', e.message);
+    //   }
     }
   }
-}
+
 // 4. EXPORT THE VARIABLES
 export { auth, db, storage };
