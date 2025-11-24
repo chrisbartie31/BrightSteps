@@ -2,25 +2,14 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
 import { 
-  getStorage, 
-  ref, 
-  uploadBytesResumable, 
-  getDownloadURL, 
-  connectStorageEmulator 
+  getStorage, ref, uploadBytesResumable, getDownloadURL, connectStorageEmulator 
 } from 'firebase/storage';
 import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  serverTimestamp, 
-  connectFirestoreEmulator 
+  getFirestore, collection, addDoc, serverTimestamp, connectFirestoreEmulator,
+  query, onSnapshot, getDocs, doc, getDoc
 } from 'firebase/firestore';
 import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  connectAuthEmulator 
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, connectAuthEmulator 
 } from 'firebase/auth'; 
 import { firebaseConfig } from '../firebaseConfig';
 
@@ -29,22 +18,18 @@ const storage = getStorage(app);
 const db = getFirestore(app);
 const auth = getAuth(app); 
 
-// === 🔌 CONNECT TO EMULATORS (Local Development Only) ===
-// This ensures the Admin App talks to the same "Local Database" as your Expo App
+// === EMULATOR CONNECTION ===
 if (window.location.hostname === "localhost") {
-  console.log("👉 Admin App connecting to Local Emulators...");
   try {
-    // Note: We use 'localhost' here because the browser is on the same machine
     connectAuthEmulator(auth, "http://localhost:9099");
     connectFirestoreEmulator(db, "localhost", 8080);
     connectStorageEmulator(storage, "localhost", 9199);
   } catch (e) {
-    console.log("Emulator connection skipped (already connected):", e.message);
+    // Ignore
   }
 }
-// ========================================================
 
-// --- Admin Login Component ---
+// --- Admin Login ---
 function AdminAuth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -62,210 +47,241 @@ function AdminAuth() {
     }
 
     return (
-        <div style={{ maxWidth: 400, margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', background: '#f0f0f0', fontFamily: 'sans-serif' }}>
-            <h2 style={{ textAlign: 'center', color: '#333' }}>BrightSteps Admin</h2>
-            <p style={{ textAlign: 'center', color: '#666', fontSize: '14px' }}>Local Emulator Mode</p>
-            
-            <input 
-                type="email" 
-                placeholder="Admin Email" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                style={{ width: '100%', padding: '10px', marginBottom: '10px', boxSizing: 'border-box' }}
-            />
-            <input 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                style={{ width: '100%', padding: '10px', marginBottom: '20px', boxSizing: 'border-box' }}
-            />
-            <button 
-                onClick={handleSignIn} 
-                disabled={loading}
-                style={{ width: '100%', padding: '12px', background: '#3498db', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-                {loading ? 'Logging In...' : 'Sign In'}
-            </button>
+        <div style={styles.container}>
+            <div style={styles.card}>
+                <h2>BrightSteps Portal</h2>
+                <input style={styles.input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+                <input style={styles.input} type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+                <button style={styles.btn} onClick={handleSignIn} disabled={loading}>Sign In</button>
+            </div>
         </div>
     );
 }
 
-// --- Main Content Upload Component ---
-function AdminAppContent({ user }) {
+// --- TAB 1: UPLOAD LESSON (WITH ASSIGNMENT) ---
+function UploadTab({ user, students }) {
     const [title, setTitle] = useState('');
-    const [ageMin, setAgeMin] = useState('');
-    const [ageMax, setAgeMax] = useState('');
-    const [appTarget, setAppTarget] = useState('junior'); 
+    const [appTarget, setAppTarget] = useState('junior');
     const [file, setFile] = useState(null);
+    const [selectedStudentIds, setSelectedStudentIds] = useState([]); // NEW: Assignment State
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0); 
 
-    function onFileChange(e) {
-        setFile(e.target.files[0]);
-    }
+    const toggleStudent = (id) => {
+        if (selectedStudentIds.includes(id)) {
+            setSelectedStudentIds(selectedStudentIds.filter(sid => sid !== id));
+        } else {
+            setSelectedStudentIds([...selectedStudentIds, id]);
+        }
+    };
 
     async function upload() {
-        if (!title.trim() || !file) {
-            return alert('Please add a title and choose a file.');
-        }
-        setUploading(true);
-        setProgress(0);
+        if (!title.trim() || !file) return alert('Missing fields');
+        
+        // If empty, it means "Public to All". If selected, specific assignment.
+        const assignments = selectedStudentIds.length > 0 ? selectedStudentIds : null;
 
+        setUploading(true);
         try {
-            // 1. Upload File
             const sref = ref(storage, `lessons/${appTarget}/${Date.now()}_${file.name}`); 
             const task = uploadBytesResumable(sref, file);
-
-            await new Promise((res, rej) => {
-                task.on('state_changed', 
-                    (snapshot) => {
-                        const p = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        setProgress(p); 
-                    }, 
-                    rej, 
-                    res
-                );
-            });
-
+            task.on('state_changed', (snap) => setProgress((snap.bytesTransferred / snap.totalBytes) * 100));
+            await task;
             const url = await getDownloadURL(sref);
-            const ageRange = (ageMin && ageMax) ? [Number(ageMin), Number(ageMax)] : null;
             
-            let lessonType = 'other';
-            if (file.type.includes('video')) {
-                lessonType = 'video';
-            } else if (file.type.includes('pdf')) {
-                lessonType = 'pdf';
-            }
+            let lessonType = file.type.includes('video') ? 'video' : 'pdf';
             
-            // 2. Add Firestore Document
             await addDoc(collection(db, 'lessons'), {
                 title: title.trim(),
                 fileUrl: url,
                 fileStoragePath: sref.fullPath,
                 type: lessonType, 
-                ageRange,
                 appTarget: appTarget, 
+                assignedStudentIds: assignments, // SAVE ASSIGNMENTS
                 createdBy: user.email, 
                 createdAt: serverTimestamp()
             });
-
-            alert('Lesson Uploaded Successfully to Emulator!');
-            setTitle('');
-            setFile(null);
-            setAgeMin(''); setAgeMax('');
-            setProgress(0);
-
+            alert('Uploaded!');
+            setTitle(''); setFile(null); setProgress(0); setSelectedStudentIds([]);
         } catch (e) {
-            console.error(e);
-            alert('Upload failed: ' + e.message);
+            alert(e.message);
         } finally {
             setUploading(false);
         }
     }
 
-    function handleSignOut() {
-        signOut(auth);
-    }
+    return (
+        <div style={styles.card}>
+            <h3>Upload Content</h3>
+            <label style={styles.label}>Title</label>
+            <input style={styles.input} value={title} onChange={e => setTitle(e.target.value)} />
+            
+            <label style={styles.label}>Target App</label>
+            <select style={styles.input} value={appTarget} onChange={e => setAppTarget(e.target.value)}>
+                <option value="junior">BrightSteps Junior (Ages 5-10)</option>
+                <option value="next">BrightSteps Next (Ages 11-18)</option>
+            </select>
+
+            {/* STUDENT ASSIGNMENT SECTION */}
+            <label style={styles.label}>Assign to Student (Optional - Leave blank for all)</label>
+            <div style={styles.checkboxContainer}>
+                {students.length === 0 && <p style={{fontSize:12, color:'#999'}}>No students found yet.</p>}
+                {students.map(s => (
+                    <div key={s.id} style={styles.checkboxItem}>
+                        <input 
+                            type="checkbox" 
+                            checked={selectedStudentIds.includes(s.id)} 
+                            onChange={() => toggleStudent(s.id)}
+                            style={{marginRight: 10}}
+                        />
+                        <span>{s.name} <span style={{fontSize:12, color:'#888'}}>({s.parentName || 'Unknown Parent'})</span></span>
+                    </div>
+                ))}
+            </div>
+
+            <label style={styles.label}>File</label>
+            <input type="file" onChange={e => setFile(e.target.files[0])} />
+            
+            {uploading && <progress value={progress} max="100" style={{width:'100%', marginTop:10}}/>}
+            
+            <button style={{...styles.btn, marginTop: 15}} onClick={upload} disabled={uploading}>
+                {uploading ? 'Uploading...' : 'Upload Lesson'}
+            </button>
+        </div>
+    );
+}
+
+// --- TAB 2: STUDENT LIST (WITH PARENT NAMES) ---
+function StudentsTab({ students }) {
+    return (
+        <div style={styles.card}>
+            <h3>Student Roster</h3>
+            <table style={{width: '100%', borderCollapse: 'collapse'}}>
+                <thead>
+                    <tr style={{textAlign:'left', borderBottom:'1px solid #ccc'}}>
+                        <th style={{padding:10}}>Child Name</th>
+                        <th style={{padding:10}}>Parent Name</th>
+                        <th style={{padding:10}}>Phone</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {students.map(s => (
+                        <tr key={s.id} style={{borderBottom:'1px solid #eee'}}>
+                            <td style={{padding:10, fontWeight:'bold'}}>{s.name}</td>
+                            <td style={{padding:10}}>{s.parentName || 'Loading...'}</td>
+                            <td style={{padding:10, fontSize:12}}>{s.parentPhone || '-'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            {students.length === 0 && <p>No students found.</p>}
+        </div>
+    );
+}
+
+// --- MAIN DATA LOADER ---
+function AdminAppContent({ user }) {
+    const [activeTab, setActiveTab] = useState('upload');
+    const [students, setStudents] = useState([]);
+
+    useEffect(() => {
+        // 1. Fetch all users (parents) to build a lookup map
+        // Note: In a massive app, you wouldn't fetch ALL users at once, but for <1000 it's fine.
+        async function fetchData() {
+            const userSnapshot = await getDocs(collection(db, 'users'));
+            const parentMap = {};
+            userSnapshot.forEach(doc => {
+                const d = doc.data();
+                // Combine First/Last name or use email fallback
+                const fullName = d.firstName && d.lastName ? `${d.firstName} ${d.lastName}` : d.email;
+                parentMap[doc.id] = { name: fullName, phone: d.phone };
+            });
+
+            // 2. Listen to Children and map the parent data
+            const q = query(collection(db, 'children'));
+            const unsub = onSnapshot(q, (snap) => {
+                const list = snap.docs.map(d => {
+                    const data = d.data();
+                    const parent = parentMap[data.parentId] || {};
+                    return { 
+                        id: d.id, 
+                        ...data,
+                        parentName: parent.name, // Mapped Name
+                        parentPhone: parent.phone 
+                    };
+                });
+                setStudents(list);
+            });
+            return unsub;
+        }
+        fetchData();
+    }, []);
 
     return (
-        <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '15px', borderBottom: '1px solid #ccc' }}>
-                <h1 style={{ margin: 0, color: '#2c3e50' }}>BrightSteps Manager <span style={{fontSize:'12px', color:'#e67e22'}}>(Emulator Connected)</span></h1>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ marginRight: '15px', fontSize: '14px' }}>Logged in as: <b>{user.email}</b></span>
-                    <button 
-                        onClick={handleSignOut} 
-                        style={{ padding: '8px 15px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                    >
-                        Sign Out
-                    </button>
+        <div style={{fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', backgroundColor: '#f5f5f7', minHeight: '100vh'}}>
+            
+            {/* HEADER */}
+            <div style={{background: '#fff', padding: '15px 30px', borderBottom: '1px solid #ddd', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <h1 style={{margin:0, fontSize: 20, color:'#1c1c1e'}}>BrightSteps Manager</h1>
+                <div>
+                    <span style={{marginRight:15, fontSize:14, color:'#888'}}>{user.email}</span>
+                    <button onClick={() => signOut(auth)} style={{...styles.btn, background:'#ff3b30', padding:'8px 12px', fontSize:12}}>Log Out</button>
                 </div>
             </div>
-            
-            <div style={{ marginTop: '30px', maxWidth: 600, padding: '30px', border: '1px solid #e0e0e0', borderRadius: '12px', background: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                <h3 style={{ marginTop: 0 }}>Upload New Lesson</h3>
-                
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Title</label>
-                    <input value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
-                </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Target App (Filtering)</label>
-                    <select value={appTarget} onChange={e => setAppTarget(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}>
-                        <option value="junior">BrightSteps Junior (Ages 5-10)</option>
-                        <option value="next">BrightSteps Next (Ages 11-18)</option>
-                    </select>
-                </div>
-
-                <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Age Range (Optional)</label>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input 
-                            type="number" 
-                            placeholder="Min Age" 
-                            value={ageMin} 
-                            onChange={e => setAgeMin(e.target.value)} 
-                            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
-                        />
-                        <input 
-                            type="number" 
-                            placeholder="Max Age" 
-                            value={ageMax} 
-                            onChange={e => setAgeMax(e.target.value)} 
-                            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} 
-                        />
-                    </div>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Lesson File</label>
-                    <input type="file" onChange={onFileChange} />
-                </div>
-                
-                {uploading && (
-                    <div style={{ margin: '15px 0' }}>
-                        <progress value={progress} max="100" style={{ width: '100%', height: '15px' }} />
-                        <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#555' }}>{progress.toFixed(2)}% Uploaded</p>
-                    </div>
-                )}
-                
+            {/* TABS */}
+            <div style={{display:'flex', justifyContent:'center', padding: 20}}>
                 <button 
-                    onClick={upload} 
-                    disabled={uploading}
-                    style={{ width: '100%', padding: '15px', background: '#2ecc71', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
+                    onClick={() => setActiveTab('upload')}
+                    style={activeTab === 'upload' ? styles.tabActive : styles.tab}
                 >
-                    {uploading ? 'Uploading...' : 'Upload Lesson'}
+                    Upload Content
                 </button>
+                <button 
+                    onClick={() => setActiveTab('students')}
+                    style={activeTab === 'students' ? styles.tabActive : styles.tab}
+                >
+                    Students
+                </button>
+            </div>
+
+            {/* CONTENT */}
+            <div style={{maxWidth: 800, margin: '0 auto', padding: 20}}>
+                {activeTab === 'upload' ? <UploadTab user={user} students={students} /> : <StudentsTab students={students} />}
             </div>
         </div>
     );
 }
 
-// --- Root App Component ---
 function AdminApp() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, u => {
+        return onAuthStateChanged(auth, u => {
             setUser(u);
             setLoading(false);
         });
-        return unsubscribe;
     }, []);
 
-    if (loading) {
-        return <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'sans-serif' }}>Connecting to Admin Panel...</div>;
-    }
-
-    if (!user) {
-        return <AdminAuth />;
-    }
-
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <AdminAuth />;
     return <AdminAppContent user={user} />;
 }
+
+const styles = {
+    container: { display: 'flex', justifyContent: 'center', marginTop: 50, fontFamily: 'sans-serif' },
+    card: { background: '#fff', padding: 30, borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #e5e5ea' },
+    input: { display: 'block', width: '100%', padding: 10, marginBottom: 15, borderRadius: 8, border: '1px solid #ccc', boxSizing: 'border-box' },
+    label: { display:'block', marginBottom: 5, fontWeight:'600', fontSize: 14, color: '#333' },
+    btn: { background: '#007AFF', color: '#fff', border: 'none', padding: '12px', borderRadius: 8, cursor: 'pointer', fontWeight: '600' },
+    tab: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#8e8e93', fontWeight: '600', borderBottom: '2px solid transparent' },
+    tabActive: { padding: '10px 20px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#007AFF', fontWeight: '600', borderBottom: '2px solid #007AFF' },
+    
+    // Checkbox List Style
+    checkboxContainer: { maxHeight: 200, overflowY: 'auto', border: '1px solid #ddd', padding: 10, borderRadius: 8, marginBottom: 15, background: '#f9f9f9' },
+    checkboxItem: { padding: '8px 0', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center' }
+};
 
 const rootElement = document.getElementById('root');
 const root = ReactDOM.createRoot(rootElement); 

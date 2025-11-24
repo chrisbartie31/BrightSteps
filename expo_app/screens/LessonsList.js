@@ -28,8 +28,22 @@ export default function LessonsList({ navigation }) {
              where('appTarget', '==', 'junior'),
              orderBy('createdAt', 'desc')
         );
+
         const lessonsUnsub = onSnapshot(lessonsQ, snap => {
-             setLessons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+             const allLessons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+             
+             // === 🛠️ FILTER LOGIC ADDED HERE ===
+             const filteredLessons = allLessons.filter(lesson => {
+                 // 1. If 'assignedStudentIds' is missing or empty -> Public Lesson
+                 if (!lesson.assignedStudentIds || lesson.assignedStudentIds.length === 0) {
+                     return true;
+                 }
+                 // 2. If it exists, only show if THIS childId is in the list
+                 return lesson.assignedStudentIds.includes(childId);
+             });
+             // ===================================
+
+             setLessons(filteredLessons);
              setLoading(false);
         });
 
@@ -124,6 +138,7 @@ export default function LessonsList({ navigation }) {
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyEmoji}>✅</Text>
                         <Text style={styles.emptyText}>All caught up!</Text>
+                        <Text style={{color: Colors.textSecondary, marginTop:5}}>No lessons assigned yet.</Text>
                     </View>
                 }
             />
