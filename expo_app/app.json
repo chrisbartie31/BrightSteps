@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "chris_bartie",
     "name": "BrightSteps",
     "slug": "brightsteps-expo",
     "version": "1.0.0",
@@ -27,6 +28,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c6220274-b2a9-4a81-8dbc-2d06051d5dc0"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c6220274-b2a9-4a81-8dbc-2d06051d5dc0"
     }
   }
 }
