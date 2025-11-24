@@ -1,7 +1,5 @@
-// expo_app/screens/LessonsList.js
-
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, SafeAreaView, LayoutAnimation, UIManager, Platform, StatusBar } from 'react-native';
 import { db } from '../services/firebase';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
@@ -9,9 +7,13 @@ import { Colors } from '../constants/Colors';
 
 export default function LessonsList({ navigation }) {
     const [lessons, setLessons] = useState([]);
-    const [progress, setProgress] = useState(new Set());
+    const [progressMap, setProgressMap] = useState({}); 
     const [loading, setLoading] = useState(true);
     const { selectedChild } = useChild();
+
+    if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
 
     const childId = selectedChild?.id;
 
@@ -21,22 +23,39 @@ export default function LessonsList({ navigation }) {
             return;
         }
 
-        // 1. Listen to Lessons (Filter for Junior App content)
         const lessonsQ = query(
              collection(db, 'lessons'), 
-             where('appTarget', '==', 'junior'), // Filter for Junior content (CRITICAL)
+             where('appTarget', '==', 'junior'),
              orderBy('createdAt', 'desc')
         );
+
         const lessonsUnsub = onSnapshot(lessonsQ, snap => {
-             setLessons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+             const allLessons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+             
+             // === 🛠️ FILTER LOGIC ADDED HERE ===
+             const filteredLessons = allLessons.filter(lesson => {
+                 // 1. If 'assignedStudentIds' is missing or empty -> Public Lesson
+                 if (!lesson.assignedStudentIds || lesson.assignedStudentIds.length === 0) {
+                     return true;
+                 }
+                 // 2. If it exists, only show if THIS childId is in the list
+                 return lesson.assignedStudentIds.includes(childId);
+             });
+             // ===================================
+
+             setLessons(filteredLessons);
              setLoading(false);
         });
 
-        // 2. Listen to Progress
         const progressQ = query(collection(db, 'progress'), where('childId', '==', childId));
         const progressUnsub = onSnapshot(progressQ, snap => {
-             const completedIds = new Set(snap.docs.filter(d => d.data().completed).map(d => d.data().lessonId));
-             setProgress(completedIds);
+             const newMap = {};
+             snap.docs.forEach(d => {
+                 const data = d.data();
+                 newMap[data.lessonId] = data.completed ? 1 : (data.progress || 0);
+             });
+             setProgressMap(newMap);
+             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         });
 
         return () => {
@@ -53,35 +72,50 @@ export default function LessonsList({ navigation }) {
     );
 
     const renderItem = ({ item }) => {
-        const isCompleted = progress.has(item.id);
+        const itemProgress = progressMap[item.id] || 0; 
+        const isCompleted = itemProgress >= 1; 
         const isVideo = item.type === 'video';
-        
-        // Use emojis for clear, visual cues
-        const icon = isCompleted ? '🎉' : (isVideo ? '📺' : '🖍️');
+        const percentDisplay = Math.round(itemProgress * 100);
         
         return (
             <TouchableOpacity 
-                style={[styles.card, isCompleted ? styles.cardCompleted : styles.cardDefault]} 
-                onPress={() => navigation.navigate('LessonDetail', { lesson: item })} // childId is retrieved via context in LessonDetail
-                activeOpacity={0.8}
+                style={styles.card} 
+                onPress={() => navigation.navigate('LessonDetail', { lesson: item })}
+                activeOpacity={0.9} 
             >
-                <View style={[styles.iconContainer, { backgroundColor: isCompleted ? Colors.primary + '30' : Colors.secondary + '60' }]}>
-                    <Text style={styles.iconText}>{icon}</Text>
+                <View style={styles.cardInner}>
+                    {/* Icon Column */}
+                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.mint + '15' }]}>
+                        <Text style={styles.iconText}>{isVideo ? '▶️' : '📄'}</Text>
+                    </View>
+
+                    {/* Text Column */}
+                    <View style={styles.textContainer}>
+                        <View style={styles.headerRow}>
+                            <Text style={[styles.tag, { color: isVideo ? Colors.secondary : Colors.mint }]}>
+                                {isVideo ? 'WATCH' : 'READ'}
+                            </Text>
+                            
+                            {/* --- STATUS INDICATOR --- */}
+                            {isCompleted ? (
+                                <Text style={styles.checkMark}>✓</Text>
+                            ) : itemProgress > 0 ? (
+                                <Text style={styles.percentText}>{percentDisplay}%</Text>
+                            ) : null}
+                            {/* ------------------------ */}
+                        </View>
+                        <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                    </View>
                 </View>
                 
-                <View style={styles.infoContainer}>
-                    <Text style={styles.lessonTitle}>{item.title}</Text>
-                    <Text style={styles.lessonMeta}>
-                        {isCompleted ? 'Finished!' : isVideo ? 'Watch Lesson' : 'Activity Sheet'}
-                    </Text>
-                </View>
-                
-                <View style={styles.statusIndicator}>
-                    {isCompleted ? (
-                        <Text style={styles.completedCheck}>⭐</Text>
-                    ) : (
-                        <Text style={styles.arrowIcon}>👉</Text>
-                    )}
+                {/* Chunky Progress Bar */}
+                <View style={styles.progressWrapper}>
+                   <View style={styles.track}>
+                      <View style={[
+                          styles.fill, 
+                          { width: `${Math.min(itemProgress * 100, 100)}%`, backgroundColor: isCompleted ? Colors.success : Colors.primary }
+                      ]} />
+                   </View>
                 </View>
             </TouchableOpacity>
         );
@@ -89,9 +123,10 @@ export default function LessonsList({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.subHeader}>Time to Learn,</Text>
-                <Text style={styles.headerTitle}>{selectedChild?.name || 'Student'}</Text>
+            <StatusBar barStyle="dark-content" />
+            <View style={styles.headerContainer}>
+                <Text style={styles.dateTitle}>TODAY'S LESSONS</Text>
+                <Text style={styles.largeTitle}>Hi, {selectedChild?.name || 'Student'}!</Text>
             </View>
 
             <FlatList
@@ -101,9 +136,9 @@ export default function LessonsList({ navigation }) {
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
-                        <Text style={styles.emptyEmoji}>😴</Text>
-                        <Text style={styles.emptyText}>No Lessons!</Text>
-                        <Text style={styles.emptySubText}>Ask a grown-up to check for new content.</Text>
+                        <Text style={styles.emptyEmoji}>✅</Text>
+                        <Text style={styles.emptyText}>All caught up!</Text>
+                        <Text style={{color: Colors.textSecondary, marginTop:5}}>No lessons assigned yet.</Text>
                     </View>
                 }
             />
@@ -112,60 +147,55 @@ export default function LessonsList({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.background },
-    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    
-    header: { padding: 25, backgroundColor: Colors.card, borderBottomWidth: 1, borderBottomColor: Colors.background },
-    subHeader: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
-    headerTitle: { fontSize: 36, fontWeight: '900', color: Colors.textPrimary }, 
-    
-    listContent: { padding: 16 },
+  container: { flex: 1, backgroundColor: Colors.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  
+  headerContainer: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 10 },
+  dateTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginBottom: 4, letterSpacing: 1 },
+  largeTitle: { fontSize: 32, fontWeight: '900', color: Colors.textPrimary },
 
-    // Card Styles
-    card: {
-        borderRadius: 20, 
-        padding: 15,
-        marginBottom: 15,
-        flexDirection: 'row',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 }, 
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-        borderWidth: 3,
-    },
-    cardDefault: {
-        backgroundColor: Colors.card,
-        borderColor: Colors.progress + '40', 
-    },
-    cardCompleted: {
-        backgroundColor: Colors.primary + '10', 
-        borderColor: Colors.primary, 
-    },
+  listContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 },
 
-    iconContainer: {
-        width: 70, 
-        height: 70,
-        borderRadius: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 20,
-    },
-    iconText: { fontSize: 36 }, 
+  // Apple "Arcade" Card Style
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 22, 
+    padding: 18,
+    marginBottom: 18,
+    shadowColor: Colors.primary, 
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  cardInner: { flexDirection: 'row', marginBottom: 15 },
+  
+  iconBox: {
+      width: 56,
+      height: 56,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 16,
+  },
+  iconText: { fontSize: 24 },
 
-    infoContainer: { flex: 1 },
-    
-    lessonTitle: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary }, 
-    lessonMeta: { fontSize: 14, color: Colors.textSecondary, marginTop: 4, fontWeight: '600' }, 
+  textContainer: { flex: 1, justifyContent: 'center' },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  tag: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
+  
+  // New Text Styles
+  checkMark: { color: Colors.success, fontWeight: '900', fontSize: 16 },
+  percentText: { color: Colors.primary, fontWeight: '800', fontSize: 14 },
 
-    statusIndicator: { width: 40, alignItems: 'flex-end' },
-    completedCheck: { fontSize: 30 }, 
-    arrowIcon: { fontSize: 30, color: Colors.progress }, 
+  cardTitle: { fontSize: 19, fontWeight: '800', color: Colors.textPrimary, lineHeight: 24 },
 
-    // Empty State
-    emptyState: { alignItems: 'center', marginTop: 80 },
-    emptyEmoji: { fontSize: 60, marginBottom: 10 },
-    emptyText: { fontSize: 24, fontWeight: '800', color: Colors.textPrimary },
-    emptySubText: { fontSize: 16, color: Colors.textSecondary, marginTop: 8 },
+  // Progress Bar
+  progressWrapper: { marginTop: 0 },
+  track: { height: 10, backgroundColor: Colors.inputBackground, borderRadius: 5 },
+  fill: { height: 10, borderRadius: 5 },
+
+  emptyState: { alignItems: 'center', marginTop: 60 },
+  emptyEmoji: { fontSize: 60, marginBottom: 10 },
+  emptyText: { fontSize: 18, color: Colors.textSecondary, fontWeight: '700' },
 });

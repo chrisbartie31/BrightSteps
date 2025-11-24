@@ -41,6 +41,5 @@ export function initFirebase(config) {
     }
   }
 }
-
 // 4. EXPORT THE VARIABLES
 export { auth, db, storage };

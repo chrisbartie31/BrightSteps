@@ -1,15 +1,34 @@
-// expo_app/screens/ChildSelect.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, Alert, SafeAreaView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  TouchableOpacity, 
+  TextInput, 
+  StyleSheet, 
+  Modal, 
+  StatusBar, 
+  Alert, 
+  ActivityIndicator,
+  KeyboardAvoidingView, // <--- FIXED: Added missing import
+  Platform              // <--- FIXED: Added missing import
+} from 'react-native';
+
+// FIXED: Use the modern Safe Area to stop the warning
+import { SafeAreaView } from 'react-native-safe-area-context'; 
+
 import { auth, db } from '../services/firebase';
 import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors';
 
 export default function ChildSelect({ navigation }) {
   const [children, setChildren] = useState([]);
   const [newName, setNewName] = useState('');
-  const [isAdding, setIsAdding] = useState(false); // Toggle for "Add" mode
+  const [passwordVerify, setPasswordVerify] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { selectChild } = useChild();
 
   useEffect(() => {
@@ -23,16 +42,40 @@ export default function ChildSelect({ navigation }) {
 
   async function addChild() {
     if (!newName.trim()) {
-      Alert.alert('Required', 'Please enter a name');
-      return;
+        Alert.alert("Missing Name", "Please enter the child's name.");
+        return;
     }
-    await addDoc(collection(db, 'children'), { 
-      name: newName.trim(), 
-      parentId: auth.currentUser.uid, 
-      createdAt: new Date() 
-    });
-    setNewName('');
-    setIsAdding(false);
+    if (!passwordVerify) {
+        Alert.alert("Security Check", "Please enter your password to confirm.");
+        return;
+    }
+
+    setLoading(true);
+    const user = auth.currentUser;
+
+    try {
+        // 1. Re-authenticate
+        const credential = EmailAuthProvider.credential(user.email, passwordVerify);
+        await reauthenticateWithCredential(user, credential);
+
+        // 2. Add child
+        await addDoc(collection(db, 'children'), { 
+            name: newName.trim(), 
+            parentId: user.uid, 
+            createdAt: new Date() 
+        });
+
+        setNewName('');
+        setPasswordVerify('');
+        setIsAdding(false);
+        Alert.alert("Success", "New profile created!");
+
+    } catch (error) {
+        console.error(error);
+        Alert.alert("Verification Failed", "Incorrect password. Please try again.");
+    } finally {
+        setLoading(false);
+    }
   }
 
   function handleSelectChild(child) {
@@ -45,152 +88,164 @@ export default function ChildSelect({ navigation }) {
     auth.signOut();
   }
 
-  // Generate a nice initial for the avatar
   const getInitial = (name) => name ? name.charAt(0).toUpperCase() : '?';
-  // Generate a random-ish color based on name length (simple trick)
   const getColor = (name) => {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD'];
+    const colors = [Colors.primary, Colors.pink, Colors.mint, Colors.orange, Colors.secondary];
     return colors[name.length % colors.length];
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" />
+      
       <View style={styles.headerContainer}>
-        <View>
-          <Text style={styles.greeting}>Welcome,</Text>
-          <Text style={styles.title}>Who is learning?</Text>
-        </View>
-        <TouchableOpacity onPress={handleSignOut} style={styles.signOutBtn}>
-          <Text style={styles.signOutText}>Log Out</Text>
+        <Text style={styles.headerTitle}>Select Profile</Text>
+        <TouchableOpacity onPress={handleSignOut}>
+          <Text style={styles.headerAction}>Log Out</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList 
-        data={children} 
+      <FlatList
+        data={children}
         keyExtractor={i => i.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.card} onPress={() => handleSelectChild(item)}>
+          <TouchableOpacity 
+            style={styles.card} 
+            onPress={() => handleSelectChild(item)} 
+            activeOpacity={0.7}
+          >
             <View style={[styles.avatar, { backgroundColor: getColor(item.name) }]}>
               <Text style={styles.avatarText}>{getInitial(item.name)}</Text>
             </View>
-            <View style={styles.cardInfo}>
-              <Text style={styles.cardName}>{item.name}</Text>
-              <Text style={styles.cardAction}>Tap to start →</Text>
-            </View>
+            <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>No children added yet. Add one below!</Text>
+          <View style={styles.emptyContainer}>
+             <Text style={styles.emptyText}>No profiles yet.</Text>
+          </View>
         }
       />
 
-      {/* Bottom Action Sheet Style for Adding */}
-      <View style={styles.addContainer}>
-        {isAdding ? (
-          <View style={styles.inputRow}>
-            <TextInput 
-              style={styles.input}
+      <TouchableOpacity style={styles.fab} onPress={() => setIsAdding(true)}>
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
+
+      {/* Secure Add Modal */}
+      <Modal animationType="fade" transparent={true} visible={isAdding} onRequestClose={() => setIsAdding(false)}>
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Sibling</Text>
+            <Text style={styles.modalSubtitle}>Verify it's you to create a new profile.</Text>
+            
+            <TextInput
+              style={styles.modalInput}
               placeholder="Child's Name"
               value={newName}
               onChangeText={setNewName}
               autoFocus
             />
-            <TouchableOpacity style={styles.addConfirmBtn} onPress={addChild}>
-              <Text style={styles.addConfirmText}>Save</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsAdding(false)}>
-              <Text style={styles.cancelText}>X</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.addNewBtn} onPress={() => setIsAdding(true)}>
-            <Text style={styles.addNewText}>+ Add New Student</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Verify Parent Password"
+              value={passwordVerify}
+              onChangeText={setPasswordVerify}
+              secureTextEntry
+            />
+
+            <View style={styles.modalActions}>
+                <TouchableOpacity style={styles.modalBtn} onPress={() => setIsAdding(false)}>
+                    <Text style={styles.btnTextCancel}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalBtn} onPress={addChild} disabled={loading}>
+                    {loading ? <ActivityIndicator color={Colors.primary} /> : <Text style={styles.btnTextAdd}>Create</Text>}
+                </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background }, // Use background constant
-  headerContainer: { 
-    padding: 24, 
-    paddingTop: 40,
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    backgroundColor: Colors.card, // Use card constant
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.background // Lighter separation
-  },
-  greeting: { fontSize: 16, color: Colors.textSecondary, fontWeight: '600' },
-  title: { fontSize: 28, fontWeight: 'bold', color: Colors.textPrimary },
-  signOutBtn: { padding: 10, backgroundColor: Colors.danger + '20', borderRadius: 10 }, // Red background for contrast
-  signOutText: { color: Colors.danger, fontWeight: '700', fontSize: 14 },
+  container: { flex: 1, backgroundColor: Colors.background },
+  
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    backgroundColor: Colors.background,
+  },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary },
+  headerAction: { fontSize: 16, fontWeight: '600', color: Colors.danger },
 
-  listContent: { padding: 20 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: Colors.textSecondary, fontSize: 16 },
+  listContent: { padding: 20 },
 
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 20, // More rounded for junior app
-    padding: 20, // Large padding
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, // Softer shadow
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  avatar: {
-    width: 60, // Larger avatar
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  avatarText: { color: Colors.card, fontSize: 26, fontWeight: 'bold' },
-  cardInfo: { flex: 1 },
-  cardName: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary }, // Bigger name
-  cardAction: { fontSize: 14, color: Colors.primary, marginTop: 4, fontWeight: '600' }, // Primary color for action
+  card: {
+    backgroundColor: Colors.card,
+    borderRadius: 16, 
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  avatarText: { fontSize: 22, fontWeight: '700', color: '#FFF' },
+  
+  cardName: { flex: 1, fontSize: 18, fontWeight: '600', color: Colors.textPrimary },
+  chevron: { fontSize: 28, color: '#C7C7CC', fontWeight: '300', marginTop: -2 },
 
-  addContainer: {
-    padding: 20,
-    backgroundColor: Colors.card,
-    borderTopWidth: 1,
-    borderTopColor: Colors.background,
-  },
-  addNewBtn: {
-    backgroundColor: Colors.primary, // Use primary color
-    borderRadius: 16, // Larger button radius
-    padding: 20, // Large touch target
-    alignItems: 'center',
-  },
-  addNewText: { color: Colors.card, fontSize: 18, fontWeight: 'bold' },
-  
-  inputRow: { flexDirection: 'row', alignItems: 'center' },
-  input: { 
-    flex: 1, 
-    backgroundColor: Colors.background, 
-    padding: 15, 
-    borderRadius: 10, 
-    marginRight: 10,
-    borderWidth: 2,
-    borderColor: Colors.secondary // Highlighting input field
-  },
-  addConfirmBtn: {
-    backgroundColor: Colors.progress, // Blue for confirmation
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderRadius: 10,
-    marginRight: 8
-  },
-  addConfirmText: { color: Colors.card, fontWeight: 'bold' },
-  cancelBtn: { padding: 10 },
-  cancelText: { color: Colors.textSecondary, fontWeight: 'bold', fontSize: 18 }
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabIcon: { fontSize: 32, color: '#FFF', marginTop: -2 },
+
+  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalContent: { width: 300, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 14, padding: 24, alignItems: 'center' },
+  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 5, color: Colors.textPrimary },
+  modalSubtitle: { fontSize: 13, color: Colors.textSecondary, marginBottom: 15, textAlign: 'center' },
+  
+  modalInput: { width: '100%', backgroundColor: Colors.inputBackground, padding: 12, borderRadius: 10, fontSize: 16, marginBottom: 15 },
+  
+  modalActions: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', marginTop: 5 },
+  modalBtn: { flex: 1, alignItems: 'center', padding: 10 },
+  btnTextCancel: { color: Colors.textSecondary, fontSize: 16, fontWeight: '600' },
+  btnTextAdd: { color: Colors.primary, fontSize: 16, fontWeight: '700' },
+
+  emptyContainer: { alignItems: 'center', marginTop: 50 },
+  emptyText: { color: Colors.textSecondary, fontSize: 16 },
 });

@@ -33256,7 +33256,44 @@ function registerCoreComponents(variant) {
  * @packageDocumentation
  */
 registerCoreComponents('');
-},{"@firebase/component":"node_modules/@firebase/component/dist/esm/index.esm2017.js","@firebase/logger":"node_modules/@firebase/logger/dist/esm/index.esm2017.js","@firebase/util":"node_modules/@firebase/util/dist/index.esm2017.js","idb":"node_modules/idb/build/index.js"}],"node_modules/@firebase/storage/dist/index.esm2017.js":[function(require,module,exports) {
+},{"@firebase/component":"node_modules/@firebase/component/dist/esm/index.esm2017.js","@firebase/logger":"node_modules/@firebase/logger/dist/esm/index.esm2017.js","@firebase/util":"node_modules/@firebase/util/dist/index.esm2017.js","idb":"node_modules/idb/build/index.js"}],"node_modules/firebase/app/dist/esm/index.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _app = require("@firebase/app");
+Object.keys(_app).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (key in exports && exports[key] === _app[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _app[key];
+    }
+  });
+});
+var name = "firebase";
+var version = "10.14.1";
+
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+(0, _app.registerVersion)(name, version, 'app');
+},{"@firebase/app":"node_modules/@firebase/app/dist/esm/index.esm2017.js"}],"node_modules/@firebase/storage/dist/index.esm2017.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -71984,44 +72021,7 @@ Object.keys(_firestore).forEach(function (key) {
     }
   });
 });
-},{"@firebase/firestore":"node_modules/@firebase/firestore/dist/index.esm2017.js"}],"node_modules/firebase/app/dist/esm/index.esm.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var _app = require("@firebase/app");
-Object.keys(_app).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _app[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _app[key];
-    }
-  });
-});
-var name = "firebase";
-var version = "10.14.1";
-
-/**
- * @license
- * Copyright 2020 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-(0, _app.registerVersion)(name, version, 'app');
-},{"@firebase/app":"node_modules/@firebase/app/dist/esm/index.esm2017.js"}],"node_modules/tslib/tslib.es6.js":[function(require,module,exports) {
+},{"@firebase/firestore":"node_modules/@firebase/firestore/dist/index.esm2017.js"}],"node_modules/tslib/tslib.es6.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -83915,22 +83915,15 @@ Object.keys(_auth).forEach(function (key) {
     }
   });
 });
-},{"@firebase/auth":"node_modules/firebase/node_modules/@firebase/auth/dist/esm2017/index.js"}],"src/firebase.js":[function(require,module,exports) {
+},{"@firebase/auth":"node_modules/firebase/node_modules/@firebase/auth/dist/esm2017/index.js"}],"firebaseConfig.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.storage = exports.db = exports.auth = void 0;
-var _app = require("firebase/app");
-var _storage = require("firebase/storage");
-var _firestore = require("firebase/firestore");
-var _auth = require("firebase/auth");
-// react_admin/src/firebase.js
-
-// We don't strictly need Auth for the MVP admin, but good to have
-
-var firebaseConfig = {
+exports.firebaseConfig = void 0;
+// react_admin/firebaseConfig.js
+var firebaseConfig = exports.firebaseConfig = {
   apiKey: "AIzaSyDhw7OHLrXbek8vFOATqhiF-prK6ZjWdvY",
   authDomain: "brightsteps-dev.firebaseapp.com",
   projectId: "brightsteps-dev",
@@ -83938,35 +83931,30 @@ var firebaseConfig = {
   messagingSenderId: "620619350148",
   appId: "1:620619350148:web:aa14ca2527424ac2a6c2d1"
 };
-var app = (0, _app.initializeApp)(firebaseConfig);
-var db = exports.db = (0, _firestore.getFirestore)(app);
-var storage = exports.storage = (0, _storage.getStorage)(app);
-var auth = exports.auth = (0, _auth.getAuth)(app);
-
-// CONNECT TO EMULATORS (Localhost is fine for web)
-if (window.location.hostname === "localhost") {
-  console.log("🔥 Connecting to Emulators...");
-  (0, _firestore.connectFirestoreEmulator)(db, 'localhost', 8080);
-  (0, _storage.connectStorageEmulator)(storage, 'localhost', 9199);
-  (0, _auth.connectAuthEmulator)(auth, "http://localhost:9099");
-}
-},{"firebase/app":"node_modules/firebase/app/dist/esm/index.esm.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","firebase/auth":"node_modules/firebase/auth/dist/esm/index.esm.js"}],"src/index.jsx":[function(require,module,exports) {
+},{}],"src/index.jsx":[function(require,module,exports) {
 "use strict";
 
 var _react = _interopRequireWildcard(require("react"));
-var _client = require("react-dom/client");
+var _client = _interopRequireDefault(require("react-dom/client"));
+var _app = require("firebase/app");
 var _storage = require("firebase/storage");
 var _firestore = require("firebase/firestore");
-var _firebase = require("./firebase");
+var _auth = require("firebase/auth");
+var _firebaseConfig = require("../firebaseConfig");
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _interopRequireWildcard(e, t) { if ("function" == typeof WeakMap) var r = new WeakMap(), n = new WeakMap(); return (_interopRequireWildcard = function (e, t) { if (!t && e && e.__esModule) return e; var o, i, f = { __proto__: null, default: e }; if (null === e || "object" != typeof e && "function" != typeof e) return f; if (o = t ? n : r) { if (o.has(e)) return o.get(e); o.set(e, f); } for (const t in e) "default" !== t && {}.hasOwnProperty.call(e, t) && ((i = (o = Object.defineProperty) && Object.getOwnPropertyDescriptor(e, t)) && (i.get || i.set) ? o(f, t, i) : f[t] = e[t]); return f; })(e, t); }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
 function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
+function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i.return) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
 function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
 function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
@@ -83974,304 +83962,549 @@ function _nonIterableRest() { throw new TypeError("Invalid attempt to destructur
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; } // react_admin/src/index.jsx
-function AdminApp() {
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+var app = (0, _app.initializeApp)(_firebaseConfig.firebaseConfig);
+var storage = (0, _storage.getStorage)(app);
+var db = (0, _firestore.getFirestore)(app);
+var auth = (0, _auth.getAuth)(app);
+
+// === EMULATOR CONNECTION ===
+if (window.location.hostname === "localhost") {
+  try {
+    (0, _auth.connectAuthEmulator)(auth, "http://localhost:9099");
+    (0, _firestore.connectFirestoreEmulator)(db, "localhost", 8080);
+    (0, _storage.connectStorageEmulator)(storage, "localhost", 9199);
+  } catch (e) {
+    // Ignore
+  }
+}
+
+// --- Admin Login ---
+function AdminAuth() {
   var _useState = (0, _react.useState)(''),
     _useState2 = _slicedToArray(_useState, 2),
-    title = _useState2[0],
-    setTitle = _useState2[1];
+    email = _useState2[0],
+    setEmail = _useState2[1];
   var _useState3 = (0, _react.useState)(''),
     _useState4 = _slicedToArray(_useState3, 2),
-    ageMin = _useState4[0],
-    setAgeMin = _useState4[1];
-  var _useState5 = (0, _react.useState)(''),
+    password = _useState4[0],
+    setPassword = _useState4[1];
+  var _useState5 = (0, _react.useState)(false),
     _useState6 = _slicedToArray(_useState5, 2),
-    ageMax = _useState6[0],
-    setAgeMax = _useState6[1];
-  var _useState7 = (0, _react.useState)(null),
-    _useState8 = _slicedToArray(_useState7, 2),
-    file = _useState8[0],
-    setFile = _useState8[1];
-  var _useState9 = (0, _react.useState)(false),
-    _useState0 = _slicedToArray(_useState9, 2),
-    uploading = _useState0[0],
-    setUploading = _useState0[1];
-  var _useState1 = (0, _react.useState)(0),
-    _useState10 = _slicedToArray(_useState1, 2),
-    progress = _useState10[0],
-    setProgress = _useState10[1];
-  function handleUpload() {
-    return _handleUpload.apply(this, arguments);
+    loading = _useState6[0],
+    setLoading = _useState6[1];
+  function handleSignIn() {
+    return _handleSignIn.apply(this, arguments);
   }
-  function _handleUpload() {
-    _handleUpload = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-      var storageRef, uploadTask;
-      return _regenerator().w(function (_context2) {
-        while (1) switch (_context2.n) {
+  function _handleSignIn() {
+    _handleSignIn = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
+      var _t;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
           case 0:
-            if (!(!file || !title)) {
+            setLoading(true);
+            _context.p = 1;
+            _context.n = 2;
+            return (0, _auth.signInWithEmailAndPassword)(auth, email, password);
+          case 2:
+            _context.n = 4;
+            break;
+          case 3:
+            _context.p = 3;
+            _t = _context.v;
+            alert('Login Failed: ' + _t.message);
+          case 4:
+            _context.p = 4;
+            setLoading(false);
+            return _context.f(4);
+          case 5:
+            return _context.a(2);
+        }
+      }, _callee, null, [[1, 3, 4, 5]]);
+    }));
+    return _handleSignIn.apply(this, arguments);
+  }
+  return /*#__PURE__*/_react.default.createElement("div", {
+    style: styles.container
+  }, /*#__PURE__*/_react.default.createElement("div", {
+    style: styles.card
+  }, /*#__PURE__*/_react.default.createElement("h2", null, "BrightSteps Portal"), /*#__PURE__*/_react.default.createElement("input", {
+    style: styles.input,
+    type: "email",
+    placeholder: "Email",
+    value: email,
+    onChange: function onChange(e) {
+      return setEmail(e.target.value);
+    }
+  }), /*#__PURE__*/_react.default.createElement("input", {
+    style: styles.input,
+    type: "password",
+    placeholder: "Password",
+    value: password,
+    onChange: function onChange(e) {
+      return setPassword(e.target.value);
+    }
+  }), /*#__PURE__*/_react.default.createElement("button", {
+    style: styles.btn,
+    onClick: handleSignIn,
+    disabled: loading
+  }, "Sign In")));
+}
+
+// --- TAB 1: UPLOAD LESSON (WITH ASSIGNMENT) ---
+function UploadTab(_ref) {
+  var user = _ref.user,
+    students = _ref.students;
+  var _useState7 = (0, _react.useState)(''),
+    _useState8 = _slicedToArray(_useState7, 2),
+    title = _useState8[0],
+    setTitle = _useState8[1];
+  var _useState9 = (0, _react.useState)('junior'),
+    _useState0 = _slicedToArray(_useState9, 2),
+    appTarget = _useState0[0],
+    setAppTarget = _useState0[1];
+  var _useState1 = (0, _react.useState)(null),
+    _useState10 = _slicedToArray(_useState1, 2),
+    file = _useState10[0],
+    setFile = _useState10[1];
+  var _useState11 = (0, _react.useState)([]),
+    _useState12 = _slicedToArray(_useState11, 2),
+    selectedStudentIds = _useState12[0],
+    setSelectedStudentIds = _useState12[1]; // NEW: Assignment State
+  var _useState13 = (0, _react.useState)(false),
+    _useState14 = _slicedToArray(_useState13, 2),
+    uploading = _useState14[0],
+    setUploading = _useState14[1];
+  var _useState15 = (0, _react.useState)(0),
+    _useState16 = _slicedToArray(_useState15, 2),
+    progress = _useState16[0],
+    setProgress = _useState16[1];
+  var toggleStudent = function toggleStudent(id) {
+    if (selectedStudentIds.includes(id)) {
+      setSelectedStudentIds(selectedStudentIds.filter(function (sid) {
+        return sid !== id;
+      }));
+    } else {
+      setSelectedStudentIds([].concat(_toConsumableArray(selectedStudentIds), [id]));
+    }
+  };
+  function upload() {
+    return _upload.apply(this, arguments);
+  }
+  function _upload() {
+    _upload = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
+      var assignments, sref, task, url, lessonType, _t2;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            if (!(!title.trim() || !file)) {
               _context2.n = 1;
               break;
             }
-            return _context2.a(2, alert("Please pick a file and title"));
+            return _context2.a(2, alert('Missing fields'));
           case 1:
+            // If empty, it means "Public to All". If selected, specific assignment.
+            assignments = selectedStudentIds.length > 0 ? selectedStudentIds : null;
             setUploading(true);
-            try {
-              storageRef = (0, _storage.ref)(_firebase.storage, "lessons/".concat(Date.now(), "_").concat(file.name));
-              uploadTask = (0, _storage.uploadBytesResumable)(storageRef, file);
-              uploadTask.on('state_changed', function (snapshot) {
-                var p = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-                setProgress(p);
-              }, function (error) {
-                console.error(error);
-                alert("Upload failed! Check console.");
-                setUploading(false);
-              }, /*#__PURE__*/_asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-                var downloadURL, type;
-                return _regenerator().w(function (_context) {
-                  while (1) switch (_context.n) {
-                    case 0:
-                      _context.n = 1;
-                      return (0, _storage.getDownloadURL)(uploadTask.snapshot.ref);
-                    case 1:
-                      downloadURL = _context.v;
-                      type = file.type.includes('pdf') ? 'pdf' : 'video';
-                      _context.n = 2;
-                      return (0, _firestore.addDoc)((0, _firestore.collection)(_firebase.db, 'lessons'), {
-                        title: title,
-                        type: type,
-                        fileUrl: downloadURL,
-                        fileStoragePath: storageRef.fullPath,
-                        ageRange: [Number(ageMin), Number(ageMax)],
-                        createdAt: (0, _firestore.serverTimestamp)()
-                      });
-                    case 2:
-                      alert("✅ Lesson Uploaded Successfully!");
-                      setUploading(false);
-                      setProgress(0);
-                      setTitle('');
-                      setFile(null);
-                      setAgeMin('');
-                      setAgeMax('');
-                    case 3:
-                      return _context.a(2);
-                  }
-                }, _callee);
-              })));
-            } catch (err) {
-              console.error(err);
-              setUploading(false);
-            }
-          case 2:
+            _context2.p = 2;
+            sref = (0, _storage.ref)(storage, "lessons/".concat(appTarget, "/").concat(Date.now(), "_").concat(file.name));
+            task = (0, _storage.uploadBytesResumable)(sref, file);
+            task.on('state_changed', function (snap) {
+              return setProgress(snap.bytesTransferred / snap.totalBytes * 100);
+            });
+            _context2.n = 3;
+            return task;
+          case 3:
+            _context2.n = 4;
+            return (0, _storage.getDownloadURL)(sref);
+          case 4:
+            url = _context2.v;
+            lessonType = file.type.includes('video') ? 'video' : 'pdf';
+            _context2.n = 5;
+            return (0, _firestore.addDoc)((0, _firestore.collection)(db, 'lessons'), {
+              title: title.trim(),
+              fileUrl: url,
+              fileStoragePath: sref.fullPath,
+              type: lessonType,
+              appTarget: appTarget,
+              assignedStudentIds: assignments,
+              // SAVE ASSIGNMENTS
+              createdBy: user.email,
+              createdAt: (0, _firestore.serverTimestamp)()
+            });
+          case 5:
+            alert('Uploaded!');
+            setTitle('');
+            setFile(null);
+            setProgress(0);
+            setSelectedStudentIds([]);
+            _context2.n = 7;
+            break;
+          case 6:
+            _context2.p = 6;
+            _t2 = _context2.v;
+            alert(_t2.message);
+          case 7:
+            _context2.p = 7;
+            setUploading(false);
+            return _context2.f(7);
+          case 8:
             return _context2.a(2);
         }
-      }, _callee2);
+      }, _callee2, null, [[2, 6, 7, 8]]);
     }));
-    return _handleUpload.apply(this, arguments);
+    return _upload.apply(this, arguments);
   }
   return /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.pageContainer
-  }, /*#__PURE__*/_react.default.createElement("div", {
     style: styles.card
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.header
-  }, /*#__PURE__*/_react.default.createElement("h1", {
-    style: styles.title
-  }, "BrightSteps Tutor \uD83C\uDF93"), /*#__PURE__*/_react.default.createElement("p", {
-    style: styles.subtitle
-  }, "Upload new lessons for your students")), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.form
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.inputGroup
-  }, /*#__PURE__*/_react.default.createElement("label", {
+  }, /*#__PURE__*/_react.default.createElement("h3", null, "Upload Content"), /*#__PURE__*/_react.default.createElement("label", {
     style: styles.label
-  }, "Lesson Title"), /*#__PURE__*/_react.default.createElement("input", {
+  }, "Title"), /*#__PURE__*/_react.default.createElement("input", {
     style: styles.input,
-    placeholder: "e.g. Introduction to Counting",
     value: title,
     onChange: function onChange(e) {
       return setTitle(e.target.value);
     }
-  })), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.row
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.inputGroup), {}, {
-      flex: 1
-    })
-  }, /*#__PURE__*/_react.default.createElement("label", {
+  }), /*#__PURE__*/_react.default.createElement("label", {
     style: styles.label
-  }, "Min Age"), /*#__PURE__*/_react.default.createElement("input", {
+  }, "Target App"), /*#__PURE__*/_react.default.createElement("select", {
     style: styles.input,
-    placeholder: "5",
-    value: ageMin,
+    value: appTarget,
     onChange: function onChange(e) {
-      return setAgeMin(e.target.value);
-    },
-    type: "number"
-  })), /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.inputGroup), {}, {
-      flex: 1
-    })
-  }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Max Age"), /*#__PURE__*/_react.default.createElement("input", {
-    style: styles.input,
-    placeholder: "10",
-    value: ageMax,
-    onChange: function onChange(e) {
-      return setAgeMax(e.target.value);
-    },
-    type: "number"
-  }))), /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.inputGroup
-  }, /*#__PURE__*/_react.default.createElement("label", {
-    style: styles.label
-  }, "Lesson Content (Video or PDF)"), /*#__PURE__*/_react.default.createElement("label", {
-    htmlFor: "file-upload",
-    style: styles.fileDropZone
-  }, file ? /*#__PURE__*/_react.default.createElement("span", {
-    style: {
-      color: '#2ECC71',
-      fontWeight: 'bold'
+      return setAppTarget(e.target.value);
     }
-  }, "\uD83D\uDCC4 ", file.name) : /*#__PURE__*/_react.default.createElement("span", {
+  }, /*#__PURE__*/_react.default.createElement("option", {
+    value: "junior"
+  }, "BrightSteps Junior (Ages 5-10)"), /*#__PURE__*/_react.default.createElement("option", {
+    value: "next"
+  }, "BrightSteps Next (Ages 11-18)")), /*#__PURE__*/_react.default.createElement("label", {
+    style: styles.label
+  }, "Assign to Student (Optional - Leave blank for all)"), /*#__PURE__*/_react.default.createElement("div", {
+    style: styles.checkboxContainer
+  }, students.length === 0 && /*#__PURE__*/_react.default.createElement("p", {
     style: {
-      color: '#7F8C8D'
+      fontSize: 12,
+      color: '#999'
     }
-  }, "Click to select a file..."), /*#__PURE__*/_react.default.createElement("input", {
-    id: "file-upload",
+  }, "No students found yet."), students.map(function (s) {
+    return /*#__PURE__*/_react.default.createElement("div", {
+      key: s.id,
+      style: styles.checkboxItem
+    }, /*#__PURE__*/_react.default.createElement("input", {
+      type: "checkbox",
+      checked: selectedStudentIds.includes(s.id),
+      onChange: function onChange() {
+        return toggleStudent(s.id);
+      },
+      style: {
+        marginRight: 10
+      }
+    }), /*#__PURE__*/_react.default.createElement("span", null, s.name, " ", /*#__PURE__*/_react.default.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: '#888'
+      }
+    }, "(", s.parentName || 'Unknown Parent', ")")));
+  })), /*#__PURE__*/_react.default.createElement("label", {
+    style: styles.label
+  }, "File"), /*#__PURE__*/_react.default.createElement("input", {
     type: "file",
     onChange: function onChange(e) {
       return setFile(e.target.files[0]);
-    },
+    }
+  }), uploading && /*#__PURE__*/_react.default.createElement("progress", {
+    value: progress,
+    max: "100",
     style: {
-      display: 'none'
-    },
-    accept: "video/*,application/pdf"
-  }))), uploading && /*#__PURE__*/_react.default.createElement("div", {
-    style: styles.progressBarContainer
-  }, /*#__PURE__*/_react.default.createElement("div", {
-    style: _objectSpread(_objectSpread({}, styles.progressBarFill), {}, {
-      width: "".concat(progress, "%")
-    })
-  })), /*#__PURE__*/_react.default.createElement("button", {
-    onClick: handleUpload,
-    disabled: uploading,
-    style: uploading ? styles.buttonDisabled : styles.button
-  }, uploading ? "Uploading... ".concat(Math.round(progress), "%") : '🚀 Upload Lesson'))));
+      width: '100%',
+      marginTop: 10
+    }
+  }), /*#__PURE__*/_react.default.createElement("button", {
+    style: _objectSpread(_objectSpread({}, styles.btn), {}, {
+      marginTop: 15
+    }),
+    onClick: upload,
+    disabled: uploading
+  }, uploading ? 'Uploading...' : 'Upload Lesson'));
 }
 
-// --- STYLES ---
+// --- TAB 2: STUDENT LIST (WITH PARENT NAMES) ---
+function StudentsTab(_ref2) {
+  var students = _ref2.students;
+  return /*#__PURE__*/_react.default.createElement("div", {
+    style: styles.card
+  }, /*#__PURE__*/_react.default.createElement("h3", null, "Student Roster"), /*#__PURE__*/_react.default.createElement("table", {
+    style: {
+      width: '100%',
+      borderCollapse: 'collapse'
+    }
+  }, /*#__PURE__*/_react.default.createElement("thead", null, /*#__PURE__*/_react.default.createElement("tr", {
+    style: {
+      textAlign: 'left',
+      borderBottom: '1px solid #ccc'
+    }
+  }, /*#__PURE__*/_react.default.createElement("th", {
+    style: {
+      padding: 10
+    }
+  }, "Child Name"), /*#__PURE__*/_react.default.createElement("th", {
+    style: {
+      padding: 10
+    }
+  }, "Parent Name"), /*#__PURE__*/_react.default.createElement("th", {
+    style: {
+      padding: 10
+    }
+  }, "Phone"))), /*#__PURE__*/_react.default.createElement("tbody", null, students.map(function (s) {
+    return /*#__PURE__*/_react.default.createElement("tr", {
+      key: s.id,
+      style: {
+        borderBottom: '1px solid #eee'
+      }
+    }, /*#__PURE__*/_react.default.createElement("td", {
+      style: {
+        padding: 10,
+        fontWeight: 'bold'
+      }
+    }, s.name), /*#__PURE__*/_react.default.createElement("td", {
+      style: {
+        padding: 10
+      }
+    }, s.parentName || 'Loading...'), /*#__PURE__*/_react.default.createElement("td", {
+      style: {
+        padding: 10,
+        fontSize: 12
+      }
+    }, s.parentPhone || '-'));
+  }))), students.length === 0 && /*#__PURE__*/_react.default.createElement("p", null, "No students found."));
+}
+
+// --- MAIN DATA LOADER ---
+function AdminAppContent(_ref3) {
+  var user = _ref3.user;
+  var _useState17 = (0, _react.useState)('upload'),
+    _useState18 = _slicedToArray(_useState17, 2),
+    activeTab = _useState18[0],
+    setActiveTab = _useState18[1];
+  var _useState19 = (0, _react.useState)([]),
+    _useState20 = _slicedToArray(_useState19, 2),
+    students = _useState20[0],
+    setStudents = _useState20[1];
+  (0, _react.useEffect)(function () {
+    // 1. Fetch all users (parents) to build a lookup map
+    // Note: In a massive app, you wouldn't fetch ALL users at once, but for <1000 it's fine.
+    function fetchData() {
+      return _fetchData.apply(this, arguments);
+    }
+    function _fetchData() {
+      _fetchData = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3() {
+        var userSnapshot, parentMap, q, unsub;
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.n) {
+            case 0:
+              _context3.n = 1;
+              return (0, _firestore.getDocs)((0, _firestore.collection)(db, 'users'));
+            case 1:
+              userSnapshot = _context3.v;
+              parentMap = {};
+              userSnapshot.forEach(function (doc) {
+                var d = doc.data();
+                // Combine First/Last name or use email fallback
+                var fullName = d.firstName && d.lastName ? "".concat(d.firstName, " ").concat(d.lastName) : d.email;
+                parentMap[doc.id] = {
+                  name: fullName,
+                  phone: d.phone
+                };
+              });
+
+              // 2. Listen to Children and map the parent data
+              q = (0, _firestore.query)((0, _firestore.collection)(db, 'children'));
+              unsub = (0, _firestore.onSnapshot)(q, function (snap) {
+                var list = snap.docs.map(function (d) {
+                  var data = d.data();
+                  var parent = parentMap[data.parentId] || {};
+                  return _objectSpread(_objectSpread({
+                    id: d.id
+                  }, data), {}, {
+                    parentName: parent.name,
+                    // Mapped Name
+                    parentPhone: parent.phone
+                  });
+                });
+                setStudents(list);
+              });
+              return _context3.a(2, unsub);
+          }
+        }, _callee3);
+      }));
+      return _fetchData.apply(this, arguments);
+    }
+    fetchData();
+  }, []);
+  return /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      backgroundColor: '#f5f5f7',
+      minHeight: '100vh'
+    }
+  }, /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      background: '#fff',
+      padding: '15px 30px',
+      borderBottom: '1px solid #ddd',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    }
+  }, /*#__PURE__*/_react.default.createElement("h1", {
+    style: {
+      margin: 0,
+      fontSize: 20,
+      color: '#1c1c1e'
+    }
+  }, "BrightSteps Manager"), /*#__PURE__*/_react.default.createElement("div", null, /*#__PURE__*/_react.default.createElement("span", {
+    style: {
+      marginRight: 15,
+      fontSize: 14,
+      color: '#888'
+    }
+  }, user.email), /*#__PURE__*/_react.default.createElement("button", {
+    onClick: function onClick() {
+      return (0, _auth.signOut)(auth);
+    },
+    style: _objectSpread(_objectSpread({}, styles.btn), {}, {
+      background: '#ff3b30',
+      padding: '8px 12px',
+      fontSize: 12
+    })
+  }, "Log Out"))), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'center',
+      padding: 20
+    }
+  }, /*#__PURE__*/_react.default.createElement("button", {
+    onClick: function onClick() {
+      return setActiveTab('upload');
+    },
+    style: activeTab === 'upload' ? styles.tabActive : styles.tab
+  }, "Upload Content"), /*#__PURE__*/_react.default.createElement("button", {
+    onClick: function onClick() {
+      return setActiveTab('students');
+    },
+    style: activeTab === 'students' ? styles.tabActive : styles.tab
+  }, "Students")), /*#__PURE__*/_react.default.createElement("div", {
+    style: {
+      maxWidth: 800,
+      margin: '0 auto',
+      padding: 20
+    }
+  }, activeTab === 'upload' ? /*#__PURE__*/_react.default.createElement(UploadTab, {
+    user: user,
+    students: students
+  }) : /*#__PURE__*/_react.default.createElement(StudentsTab, {
+    students: students
+  })));
+}
+function AdminApp() {
+  var _useState21 = (0, _react.useState)(null),
+    _useState22 = _slicedToArray(_useState21, 2),
+    user = _useState22[0],
+    setUser = _useState22[1];
+  var _useState23 = (0, _react.useState)(true),
+    _useState24 = _slicedToArray(_useState23, 2),
+    loading = _useState24[0],
+    setLoading = _useState24[1];
+  (0, _react.useEffect)(function () {
+    return (0, _auth.onAuthStateChanged)(auth, function (u) {
+      setUser(u);
+      setLoading(false);
+    });
+  }, []);
+  if (loading) return /*#__PURE__*/_react.default.createElement("div", null, "Loading...");
+  if (!user) return /*#__PURE__*/_react.default.createElement(AdminAuth, null);
+  return /*#__PURE__*/_react.default.createElement(AdminAppContent, {
+    user: user
+  });
+}
 var styles = {
-  pageContainer: {
-    minHeight: '100vh',
-    backgroundColor: '#F5F7FA',
+  container: {
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    marginTop: 50,
+    fontFamily: 'sans-serif'
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    maxWidth: '500px',
-    padding: '40px',
-    borderRadius: '20px',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.05)'
-  },
-  header: {
-    textAlign: 'center',
-    marginBottom: '30px'
-  },
-  title: {
-    color: '#4A90E2',
-    margin: 0,
-    fontSize: '28px',
-    fontWeight: '800'
-  },
-  subtitle: {
-    color: '#7F8C8D',
-    margin: '8px 0 0 0',
-    fontSize: '16px'
-  },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  row: {
-    display: 'flex',
-    gap: '15px'
-  },
-  label: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#34495E'
+    background: '#fff',
+    padding: 30,
+    borderRadius: 12,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+    border: '1px solid #e5e5ea'
   },
   input: {
-    padding: '12px 15px',
-    fontSize: '16px',
-    border: '1px solid #E0E0E0',
-    borderRadius: '8px',
-    outline: 'none',
-    transition: 'border-color 0.2s'
+    display: 'block',
+    width: '100%',
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 8,
+    border: '1px solid #ccc',
+    boxSizing: 'border-box'
   },
-  fileDropZone: {
-    border: '2px dashed #E0E0E0',
-    borderRadius: '12px',
-    padding: '30px',
-    textAlign: 'center',
-    cursor: 'pointer',
-    backgroundColor: '#FAFAFA',
-    transition: 'all 0.2s'
+  label: {
+    display: 'block',
+    marginBottom: 5,
+    fontWeight: '600',
+    fontSize: 14,
+    color: '#333'
   },
-  button: {
-    padding: '16px',
-    backgroundColor: '#4A90E2',
-    color: 'white',
+  btn: {
+    background: '#007AFF',
+    color: '#fff',
     border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
+    padding: '12px',
+    borderRadius: 8,
     cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(74, 144, 226, 0.3)',
-    transition: 'transform 0.1s'
+    fontWeight: '600'
   },
-  buttonDisabled: {
-    padding: '16px',
-    backgroundColor: '#BDC3C7',
-    color: 'white',
+  tab: {
+    padding: '10px 20px',
     border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'not-allowed'
+    background: 'transparent',
+    cursor: 'pointer',
+    color: '#8e8e93',
+    fontWeight: '600',
+    borderBottom: '2px solid transparent'
   },
-  progressBarContainer: {
-    height: '8px',
-    backgroundColor: '#F0F0F0',
-    borderRadius: '4px',
-    overflow: 'hidden'
+  tabActive: {
+    padding: '10px 20px',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    color: '#007AFF',
+    fontWeight: '600',
+    borderBottom: '2px solid #007AFF'
   },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#2ECC71',
-    transition: 'width 0.3s ease'
+  // Checkbox List Style
+  checkboxContainer: {
+    maxHeight: 200,
+    overflowY: 'auto',
+    border: '1px solid #ddd',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    background: '#f9f9f9'
+  },
+  checkboxItem: {
+    padding: '8px 0',
+    borderBottom: '1px solid #eee',
+    display: 'flex',
+    alignItems: 'center'
   }
 };
-var container = document.getElementById('root');
-if (container) {
-  var root = (0, _client.createRoot)(container);
-  root.render(/*#__PURE__*/_react.default.createElement(AdminApp, null));
-} else {
-  console.error("Failed to find root element");
-}
-},{"react":"node_modules/react/index.js","react-dom/client":"node_modules/react-dom/client.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","./firebase":"src/firebase.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+var rootElement = document.getElementById('root');
+var root = _client.default.createRoot(rootElement);
+root.render(_react.default.createElement(AdminApp));
+},{"react":"node_modules/react/index.js","react-dom/client":"node_modules/react-dom/client.js","firebase/app":"node_modules/firebase/app/dist/esm/index.esm.js","firebase/storage":"node_modules/firebase/storage/dist/esm/index.esm.js","firebase/firestore":"node_modules/firebase/firestore/dist/esm/index.esm.js","firebase/auth":"node_modules/firebase/auth/dist/esm/index.esm.js","../firebaseConfig":"firebaseConfig.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -84296,7 +84529,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56588" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58147" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

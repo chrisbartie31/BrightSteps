@@ -1,13 +1,23 @@
-// expo_app/constants/Colors.js (NEW FILE)
-export const Colors = {
-  primary: '#5AD38D',    // Friendly Green (e.g., action button, success)
-  secondary: '#FFC837',  // Energetic Yellow (e.g., accent, warnings)
-  background: '#F8F9FA', // Light Background
-  card: '#FFFFFF',       // Clean White
-  textPrimary: '#2C3E50',// Dark Blue Text (readable)
-  textSecondary: '#7F8C8D',// Grey Text
-  danger: '#FF6B6B',      // Red for logout/errors
-  progress: '#4A90E2',   // Blue for activity/progress
-};
+// expo_app/constants/Colors.js
 
-// Use this file to import colors across all components!
+export const Colors = {
+  // Vibrant Apple System Colors
+  primary: '#007AFF',        // System Blue
+  secondary: '#5856D6',      // System Indigo
+  mint: '#00C7BE',           // System Teal/Mint
+  pink: '#FF2D55',           // System Pink
+  orange: '#FF9500',         // System Orange
+  yellow: '#FFCC00',         // System Yellow
+  
+  // Backgrounds
+  background: '#F2F2F7',     // System Grouped Background
+  card: '#FFFFFF',           // Pure White
+  
+  // Text
+  textPrimary: '#1C1C1E',    // Almost Black (Softer than #000)
+  textSecondary: '#8E8E93',  // System Gray
+  
+  // UI Elements
+  separator: '#C6C6C8',
+  inputBackground: '#F2F2F7' 
+};
