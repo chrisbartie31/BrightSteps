@@ -106,7 +106,7 @@ export default function ChildSelect({ navigation }) {
             <Text style={styles.subHeader}>Welcome,</Text>
             
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={styles.headerTitle}>Who's playing?</Text>
+                <Text style={styles.headerTitle}>Who's Learning?</Text>
                 <InfoButton 
                     title="Student Profiles"
                     message="Tap a card to switch to that student's dashboard. Tap the '+' button below to create a new profile for a sibling."
