@@ -14,20 +14,17 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, collection, writeBatch } from 'firebase/firestore'; // NEW IMPORTS
+import { doc, collection, writeBatch } from 'firebase/firestore'; 
 import { auth, db } from '../services/firebase';
 import { Colors } from '../constants/Colors'; 
 
 export default function AuthScreen() {
-  // Login State
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
 
-  // Core Credentials
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Extended Profile Data (Sign Up Only)
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -38,7 +35,6 @@ export default function AuthScreen() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      // App.js listener handles navigation
     } catch (e) {
       Alert.alert('Login Failed', e.message);
     } finally {
@@ -46,9 +42,8 @@ export default function AuthScreen() {
     }
   }
 
-  // === HANDLER: SIGN UP (Transactional) ===
+  // === HANDLER: SIGN UP ===
   async function handleSignUp() {
-    // 1. Validation
     if (!email.trim() || !password || !firstName.trim() || !lastName.trim() || !phone.trim()) {
       return Alert.alert("Missing Details", "Please fill in all parent details.");
     }
@@ -58,36 +53,33 @@ export default function AuthScreen() {
 
     setLoading(true);
     try {
-      // 2. Create Auth User
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const uid = userCredential.user.uid;
 
-      // 3. Batch Write (Atomic Operation)
       const batch = writeBatch(db);
 
-      // A. Create Parent/Au Pair Profile
+      // A. Create Parent Profile with Onboarding Flag
       const parentRef = doc(db, 'users', uid);
       batch.set(parentRef, {
         email: email.trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         phone: phone.trim(),
-        role: 'parent', // or 'au_pair', generic role for the account owner
+        role: 'parent',
+        onboardingComplete: false, // <--- CRITICAL FLAG
         createdAt: new Date()
       });
 
       // B. Create First Child Profile
-      const newChildRef = doc(collection(db, 'children')); // Auto-ID
+      const newChildRef = doc(collection(db, 'children')); 
       batch.set(newChildRef, {
         name: childName.trim(),
         parentId: uid,
-        assignedTutorId: null, // Will be assigned by admin later
+        assignedTutorId: null, 
         createdAt: new Date()
       });
 
-      // 4. Commit to Database
       await batch.commit();
-      
       Alert.alert("Welcome!", "Account created successfully.");
       
     } catch (e) {
@@ -110,7 +102,6 @@ export default function AuthScreen() {
             </Text>
           </View>
 
-          {/* === SIGN UP FORM === */}
           {!isLogin && (
             <>
               <Text style={styles.sectionLabel}>YOUR DETAILS</Text>
@@ -154,7 +145,6 @@ export default function AuthScreen() {
             </>
           )}
 
-          {/* === CREDENTIALS FORM === */}
           <Text style={styles.sectionLabel}>{isLogin ? 'ACCOUNT' : 'LOGIN DETAILS'}</Text>
           <View style={styles.inputGroup}>
             <TextInput 
@@ -216,11 +206,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textSecondary,
     marginBottom: 8,
-    marginLeft: 16, // Apple Style Header Offset
+    marginLeft: 16,
     textTransform: 'uppercase'
   },
 
-  // Apple Style Grouped Inputs
   inputGroup: {
     backgroundColor: Colors.card,
     borderRadius: 12,
