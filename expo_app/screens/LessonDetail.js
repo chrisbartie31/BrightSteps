@@ -1,6 +1,4 @@
-// expo_app/screens/LessonDetail.js
-
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator, Platform, Linking, TextInput } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { storage, db, auth } from '../services/firebase';
@@ -9,6 +7,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Colors } from '../constants/Colors';
 import { useChild } from '../contexts/ChildContext'; 
 import SafeVideo from '../components/SafeVideo';
+import InfoButton from '../components/InfoButton'; // NEW IMPORT
 
 const LoadingView = () => (
   <View style={styles.center}>
@@ -25,10 +24,7 @@ export default function LessonDetail({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
-  // Progress States
-  const [currentProgress, setCurrentProgress] = useState(0); // 0 to 1
-  
-  // PDF Tracking States
+  const [currentProgress, setCurrentProgress] = useState(0); 
   const [pdfPage, setPdfPage] = useState('');
   const [pdfTotal, setPdfTotal] = useState('');
 
@@ -38,21 +34,17 @@ export default function LessonDetail({ route, navigation }) {
       try {
         if (!lesson) return;
         
-        // 1. Load File URL
         let url = lesson.fileUrl;
         if (lesson.fileStoragePath && !url) {
           const sref = ref(storage, lesson.fileStoragePath);
           url = await getDownloadURL(sref);
         }
         
-        // Emulator Patch
         if (url && url.includes('localhost')) {
-             // Use your computer IP
              url = url.replace('localhost', '192.168.86.22'); 
         }
         if (mounted) setFileUrl(url);
 
-        // 2. Load Previous Progress
         if (auth.currentUser && childId) {
             const docRef = doc(db, 'progress', `${childId}_${lesson.id}`);
             const docSnap = await getDoc(docRef);
@@ -74,23 +66,21 @@ export default function LessonDetail({ route, navigation }) {
     return () => { mounted = false; };
   }, [lesson]);
 
-  // --- FUNCTION TO SAVE PROGRESS TO FIRESTORE ---
   async function saveProgressToDb(progressVal, extraData = {}) {
     if (!auth.currentUser || !childId) return;
     
-    // Cap at 1 (100%)
     const safeProgress = Math.min(Math.max(progressVal, 0), 1);
-    const isFinished = safeProgress >= 0.95; // Auto-complete if 95% done
+    const isFinished = safeProgress >= 0.95; 
 
     try {
       const pdoc = doc(db, 'progress', `${childId}_${lesson.id}`);
       await setDoc(pdoc, { 
         childId, 
         lessonId: lesson.id, 
-        progress: safeProgress, // Save percentage
+        progress: safeProgress, 
         completed: isFinished, 
         lastUpdated: new Date(),
-        ...extraData // Store page numbers if PDF
+        ...extraData 
       }, { merge: true });
       
       setCurrentProgress(safeProgress);
@@ -99,24 +89,16 @@ export default function LessonDetail({ route, navigation }) {
     }
   }
 
-  // --- VIDEO: TRACKING LOGIC ---
   const onPlaybackStatusUpdate = (status) => {
       if (!status.isLoaded) return;
-      
-      // Only save every 5 seconds or so to avoid spamming DB (simple throttle)
-      // For now, we update local state, and save on "Back" or "Pause"
       if (status.isPlaying && status.durationMillis > 0) {
           const percentage = status.positionMillis / status.durationMillis;
-          
-          // Auto-save if we cross a 10% threshold roughly
-          // In a real app, utilize a useRef to throttle this properly
           if (Math.abs(percentage - currentProgress) > 0.05) {
               saveProgressToDb(percentage);
           }
       }
   };
 
-  // --- PDF: MANUAL TRACKING LOGIC ---
   const savePdfPage = () => {
       const curr = parseInt(pdfPage);
       const tot = parseInt(pdfTotal);
@@ -124,7 +106,6 @@ export default function LessonDetail({ route, navigation }) {
       if (!curr || !tot || tot === 0) {
           return Alert.alert("Oops", "Please enter valid page numbers.");
       }
-      
       setSaving(true);
       const percentage = curr / tot;
       saveProgressToDb(percentage, { pdfPage: curr, pdfTotal: tot })
@@ -134,7 +115,6 @@ export default function LessonDetail({ route, navigation }) {
         });
   };
 
-  // --- MARK AS DONE BUTTON ---
   const markDone = () => {
       saveProgressToDb(1.0).then(() => {
           Alert.alert('🚀 YOU DID IT!', `Awesome job! Lesson Complete!`, [
@@ -144,8 +124,6 @@ export default function LessonDetail({ route, navigation }) {
   };
 
   if (loading) return <LoadingView />;
-
-  // --- RENDERERS ---
 
   const renderPdf = () => {
     return (
@@ -161,7 +139,6 @@ export default function LessonDetail({ route, navigation }) {
                 </View>
             )}
             
-            {/* PDF PAGE TRACKER */}
             <View style={styles.pdfTracker}>
                 <Text style={styles.trackerLabel}>I am on page</Text>
                 <TextInput 
@@ -196,7 +173,6 @@ export default function LessonDetail({ route, navigation }) {
             style={styles.mediaPlayer}
             useNativeControls={true}
             resizeMode="contain"
-            // CONNECT TRACKING HERE
             onPlaybackStatusUpdate={onPlaybackStatusUpdate} 
           />
         ) : lesson?.type === 'pdf' && fileUrl ? (
@@ -209,12 +185,24 @@ export default function LessonDetail({ route, navigation }) {
       </View>
 
       <View style={styles.infoSheet}>
-        <View style={{flexDirection:'row', justifyContent:'space-between'}}>
-            <View>
+        <View style={{flexDirection:'row', justifyContent:'space-between', marginBottom: 10}}>
+            <View style={{flex: 1}}>
               <Text style={styles.typeLabel}>{lesson?.type === 'pdf' ? '📖 READING' : '▶️ VIDEO'}</Text>
-              <Text style={styles.title}>{lesson?.title}</Text>
+              
+              {/* TITLE + INFO BUTTON */}
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text style={styles.title} numberOfLines={1}>{lesson?.title}</Text>
+                  <InfoButton 
+                      title="Saving Progress"
+                      message={lesson?.type === 'video' 
+                        ? "Video progress saves automatically every few seconds while you watch." 
+                        : "Enter your current page number below and tap 'Save' to track your reading."}
+                      style={{marginLeft: 8}}
+                      color={Colors.textSecondary}
+                  />
+              </View>
             </View>
-            {/* PROGRESS PERCENTAGE BADGE */}
+
             <View style={styles.progressBadge}>
                 <Text style={styles.progressText}>{Math.round(currentProgress * 100)}%</Text>
             </View>
@@ -232,14 +220,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   
-  contentArea: { flex: 1 }, // Takes remaining space
+  contentArea: { flex: 1 }, 
   mediaPlayer: { width: '100%', height: '100%', backgroundColor: 'black' },
   errorText: { color: Colors.card, marginBottom: 10 },
 
   openButton: { backgroundColor: Colors.progress, padding: 15, borderRadius: 10 },
   openButtonText: { color: Colors.card, fontWeight: 'bold' },
 
-  // PDF Tracker Styles
   pdfTracker: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -278,7 +265,7 @@ const styles = StyleSheet.create({
     elevation: 10
   },
   typeLabel: { color: Colors.textSecondary, fontSize: 12, fontWeight: '800', marginBottom: 4, letterSpacing: 1 },
-  title: { fontSize: 24, fontWeight: '900', color: Colors.textPrimary, marginBottom: 20 }, 
+  title: { fontSize: 24, fontWeight: '900', color: Colors.textPrimary, maxWidth: '80%' }, 
 
   progressBadge: {
       backgroundColor: Colors.background,

@@ -4,6 +4,7 @@ import { db } from '../services/firebase';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors'; 
+import InfoButton from '../components/InfoButton'; // NEW IMPORT
 
 export default function LessonsList({ navigation }) {
     const [lessons, setLessons] = useState([]);
@@ -32,16 +33,12 @@ export default function LessonsList({ navigation }) {
         const lessonsUnsub = onSnapshot(lessonsQ, snap => {
              const allLessons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
              
-             // === 🛠️ FILTER LOGIC ADDED HERE ===
              const filteredLessons = allLessons.filter(lesson => {
-                 // 1. If 'assignedStudentIds' is missing or empty -> Public Lesson
                  if (!lesson.assignedStudentIds || lesson.assignedStudentIds.length === 0) {
                      return true;
                  }
-                 // 2. If it exists, only show if THIS childId is in the list
                  return lesson.assignedStudentIds.includes(childId);
              });
-             // ===================================
 
              setLessons(filteredLessons);
              setLoading(false);
@@ -84,31 +81,26 @@ export default function LessonsList({ navigation }) {
                 activeOpacity={0.9} 
             >
                 <View style={styles.cardInner}>
-                    {/* Icon Column */}
-                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.mint + '15' }]}>
+                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.brandYellow + '15' }]}>
                         <Text style={styles.iconText}>{isVideo ? '▶️' : '📄'}</Text>
                     </View>
 
-                    {/* Text Column */}
                     <View style={styles.textContainer}>
                         <View style={styles.headerRow}>
                             <Text style={[styles.tag, { color: isVideo ? Colors.secondary : Colors.mint }]}>
                                 {isVideo ? 'WATCH' : 'READ'}
                             </Text>
                             
-                            {/* --- STATUS INDICATOR --- */}
                             {isCompleted ? (
                                 <Text style={styles.checkMark}>✓</Text>
                             ) : itemProgress > 0 ? (
                                 <Text style={styles.percentText}>{percentDisplay}%</Text>
                             ) : null}
-                            {/* ------------------------ */}
                         </View>
                         <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
                     </View>
                 </View>
                 
-                {/* Chunky Progress Bar */}
                 <View style={styles.progressWrapper}>
                    <View style={styles.track}>
                       <View style={[
@@ -125,7 +117,16 @@ export default function LessonsList({ navigation }) {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
             <View style={styles.headerContainer}>
-                <Text style={styles.dateTitle}>TODAY'S LESSONS</Text>
+                <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+                    <Text style={styles.dateTitle}>TODAY'S LESSONS</Text>
+                    
+                    {/* INFO BUTTON TOP RIGHT */}
+                    <InfoButton 
+                        title="Tracking Progress"
+                        message="• 'Watch' icons are videos.\n• 'Read' icons are documents.\n\nProgress updates automatically as you watch videos. For documents, enter the page number to save your spot!"
+                        color={Colors.textSecondary}
+                    />
+                </View>
                 <Text style={styles.largeTitle}>Hi, {selectedChild?.name || 'Student'}!</Text>
             </View>
 
@@ -156,7 +157,6 @@ const styles = StyleSheet.create({
 
   listContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 },
 
-  // Apple "Arcade" Card Style
   card: {
     backgroundColor: Colors.card,
     borderRadius: 22, 
@@ -184,13 +184,11 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   tag: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
   
-  // New Text Styles
   checkMark: { color: Colors.success, fontWeight: '900', fontSize: 16 },
   percentText: { color: Colors.primary, fontWeight: '800', fontSize: 14 },
 
   cardTitle: { fontSize: 19, fontWeight: '800', color: Colors.textPrimary, lineHeight: 24 },
 
-  // Progress Bar
   progressWrapper: { marginTop: 0 },
   track: { height: 10, backgroundColor: Colors.inputBackground, borderRadius: 5 },
   fill: { height: 10, borderRadius: 5 },

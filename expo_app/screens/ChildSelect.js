@@ -10,18 +10,17 @@ import {
   StatusBar, 
   Alert, 
   ActivityIndicator,
-  KeyboardAvoidingView, // <--- FIXED: Added missing import
-  Platform              // <--- FIXED: Added missing import
+  KeyboardAvoidingView, 
+  Platform
+  // Removed Image import since we aren't using it
 } from 'react-native';
-
-// FIXED: Use the modern Safe Area to stop the warning
 import { SafeAreaView } from 'react-native-safe-area-context'; 
-
 import { auth, db } from '../services/firebase';
 import { collection, addDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors';
+import InfoButton from '../components/InfoButton'; 
 
 export default function ChildSelect({ navigation }) {
   const [children, setChildren] = useState([]);
@@ -54,11 +53,9 @@ export default function ChildSelect({ navigation }) {
     const user = auth.currentUser;
 
     try {
-        // 1. Re-authenticate
         const credential = EmailAuthProvider.credential(user.email, passwordVerify);
         await reauthenticateWithCredential(user, credential);
 
-        // 2. Add child
         await addDoc(collection(db, 'children'), { 
             name: newName.trim(), 
             parentId: user.uid, 
@@ -99,7 +96,25 @@ export default function ChildSelect({ navigation }) {
       <StatusBar barStyle="dark-content" />
       
       <View style={styles.headerContainer}>
-        <Text style={styles.headerTitle}>Select Profile</Text>
+        <View>
+            {/* === TEXT LOGO REPLACEMENT === */}
+            <View style={{marginBottom: 5}}>
+                <Text style={styles.brandText}>BrightSteps</Text>
+            </View>
+            {/* ============================= */}
+
+            <Text style={styles.subHeader}>Welcome,</Text>
+            
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.headerTitle}>Who's playing?</Text>
+                <InfoButton 
+                    title="Student Profiles"
+                    message="Tap a card to switch to that student's dashboard. Tap the '+' button below to create a new profile for a sibling."
+                    style={{ marginLeft: 10 }}
+                />
+            </View>
+        </View>
+
         <TouchableOpacity onPress={handleSignOut}>
           <Text style={styles.headerAction}>Log Out</Text>
         </TouchableOpacity>
@@ -179,13 +194,23 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start', 
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0,0,0,0.05)',
     backgroundColor: Colors.background,
   },
+  
+  // New Brand Text Style
+  brandText: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: Colors.primary,
+      letterSpacing: -0.5,
+  },
+
+  subHeader: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   headerTitle: { fontSize: 28, fontWeight: '800', color: Colors.textPrimary },
-  headerAction: { fontSize: 16, fontWeight: '600', color: Colors.danger },
+  headerAction: { fontSize: 16, fontWeight: '600', color: Colors.danger, marginTop: 5 },
 
   listContent: { padding: 20 },
 
