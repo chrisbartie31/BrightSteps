@@ -5,6 +5,7 @@ import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestor
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors'; 
 import { Ionicons } from '@expo/vector-icons';
+import InfoButton from '../components/InfoButton';
 import InfoModal from '../components/InfoModal';
 
 export default function LessonsList({ navigation }) {
@@ -22,10 +23,16 @@ export default function LessonsList({ navigation }) {
     const childId = selectedChild?.id;
 
     useEffect(() => {
+        // === 🛠️ CRITICAL FIX: SAFE NAVIGATION ===
         if (!childId) {
-            navigation.goBack();
+            // Instead of goBack() (which crashes on reload), we force a reset to the start
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'ChildSelect' }],
+            });
             return;
         }
+        // ========================================
 
         const lessonsQ = query(
              collection(db, 'lessons'), 
@@ -143,13 +150,12 @@ export default function LessonsList({ navigation }) {
                 }
             />
 
-            {/* REUSABLE MODAL WITH CUSTOM CONTENT */}
+            {/* REUSABLE MODAL */}
             <InfoModal 
                 visible={infoVisible} 
                 onClose={() => setInfoVisible(false)}
                 title="Tracking Progress"
             >
-                 {/* Legend Item 1: Videos */}
                 <View style={styles.legendRow}>
                     <View style={[styles.iconBoxModal, { backgroundColor: Colors.secondary + '20' }]}>
                     <Text style={{fontSize: 18}}>▶️</Text>
@@ -160,7 +166,6 @@ export default function LessonsList({ navigation }) {
                     </View>
                 </View>
 
-                {/* Legend Item 2: Documents */}
                 <View style={styles.legendRow}>
                     <View style={[styles.iconBoxModal, { backgroundColor: Colors.mint + '20' }]}>
                     <Text style={{fontSize: 18}}>📄</Text>
