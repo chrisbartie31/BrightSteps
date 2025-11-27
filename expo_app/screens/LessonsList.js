@@ -4,13 +4,16 @@ import { db } from '../services/firebase';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { useChild } from '../contexts/ChildContext';
 import { Colors } from '../constants/Colors'; 
-import InfoButton from '../components/InfoButton'; // NEW IMPORT
+import { Ionicons } from '@expo/vector-icons';
+import InfoModal from '../components/InfoModal';
 
 export default function LessonsList({ navigation }) {
     const [lessons, setLessons] = useState([]);
     const [progressMap, setProgressMap] = useState({}); 
     const [loading, setLoading] = useState(true);
     const { selectedChild } = useChild();
+    
+    const [infoVisible, setInfoVisible] = useState(false);
 
     if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
         UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -29,7 +32,6 @@ export default function LessonsList({ navigation }) {
              where('appTarget', '==', 'junior'),
              orderBy('createdAt', 'desc')
         );
-
         const lessonsUnsub = onSnapshot(lessonsQ, snap => {
              const allLessons = snap.docs.map(d => ({ id: d.id, ...d.data() }));
              
@@ -81,7 +83,7 @@ export default function LessonsList({ navigation }) {
                 activeOpacity={0.9} 
             >
                 <View style={styles.cardInner}>
-                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.brandYellow + '15' }]}>
+                    <View style={[styles.iconBox, { backgroundColor: isVideo ? Colors.secondary + '15' : Colors.mint + '15' }]}>
                         <Text style={styles.iconText}>{isVideo ? '▶️' : '📄'}</Text>
                     </View>
 
@@ -120,12 +122,9 @@ export default function LessonsList({ navigation }) {
                 <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
                     <Text style={styles.dateTitle}>TODAY'S LESSONS</Text>
                     
-                    {/* INFO BUTTON TOP RIGHT */}
-                    <InfoButton 
-                        title="Tracking Progress"
-                        message="• 'Watch' icons are videos.\n• 'Read' icons are documents.\n\nProgress updates automatically as you watch videos. For documents, enter the page number to save your spot!"
-                        color={Colors.textSecondary}
-                    />
+                    <TouchableOpacity onPress={() => setInfoVisible(true)}>
+                        <Ionicons name="information-circle-outline" size={26} color={Colors.textSecondary} />
+                    </TouchableOpacity>
                 </View>
                 <Text style={styles.largeTitle}>Hi, {selectedChild?.name || 'Student'}!</Text>
             </View>
@@ -143,6 +142,47 @@ export default function LessonsList({ navigation }) {
                     </View>
                 }
             />
+
+            {/* REUSABLE MODAL WITH CUSTOM CONTENT */}
+            <InfoModal 
+                visible={infoVisible} 
+                onClose={() => setInfoVisible(false)}
+                title="Tracking Progress"
+            >
+                 {/* Legend Item 1: Videos */}
+                <View style={styles.legendRow}>
+                    <View style={[styles.iconBoxModal, { backgroundColor: Colors.secondary + '20' }]}>
+                    <Text style={{fontSize: 18}}>▶️</Text>
+                    </View>
+                    <View style={{flex: 1}}>
+                        <Text style={styles.legendTitle}>Watch</Text>
+                        <Text style={styles.legendDesc}>Video lessons.</Text>
+                    </View>
+                </View>
+
+                {/* Legend Item 2: Documents */}
+                <View style={styles.legendRow}>
+                    <View style={[styles.iconBoxModal, { backgroundColor: Colors.mint + '20' }]}>
+                    <Text style={{fontSize: 18}}>📄</Text>
+                    </View>
+                    <View style={{flex: 1}}>
+                        <Text style={styles.legendTitle}>Read</Text>
+                        <Text style={styles.legendDesc}>Document / Worksheet lessons.</Text>
+                    </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.infoBlock}>
+                    <Text style={styles.paragraph}>
+                        <Text style={{fontWeight:'700'}}>Videos</Text> save your progress automatically as you watch.
+                    </Text>
+                    <Text style={styles.paragraph}>
+                        For <Text style={{fontWeight:'700'}}>Documents</Text>, enter your page number below the file to save your spot!
+                    </Text>
+                </View>
+            </InfoModal>
+
         </SafeAreaView>
     );
 }
@@ -170,14 +210,7 @@ const styles = StyleSheet.create({
   },
   cardInner: { flexDirection: 'row', marginBottom: 15 },
   
-  iconBox: {
-      width: 56,
-      height: 56,
-      borderRadius: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: 16,
-  },
+  iconBox: { width: 56, height: 56, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   iconText: { fontSize: 24 },
 
   textContainer: { flex: 1, justifyContent: 'center' },
@@ -196,4 +229,13 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', marginTop: 60 },
   emptyEmoji: { fontSize: 60, marginBottom: 10 },
   emptyText: { fontSize: 18, color: Colors.textSecondary, fontWeight: '700' },
+
+  // Styles for Modal Content
+  legendRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 12, width: '100%' },
+  iconBoxModal: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  legendTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
+  legendDesc: { fontSize: 14, color: Colors.textSecondary, marginTop: 2 },
+  divider: { height: 1, width: '100%', backgroundColor: Colors.inputBackground, marginVertical: 15 },
+  infoBlock: { alignSelf: 'flex-start', width: '100%', marginBottom: 10 },
+  paragraph: { fontSize: 15, color: Colors.textPrimary, textAlign: 'left', marginBottom: 8, lineHeight: 22 },
 });

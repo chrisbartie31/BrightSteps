@@ -11,12 +11,14 @@ import {
   Platform, 
   StatusBar, 
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Image // Added Image
 } from 'react-native';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, collection, writeBatch } from 'firebase/firestore'; 
 import { auth, db } from '../services/firebase';
 import { Colors } from '../constants/Colors'; 
+import { Ionicons } from '@expo/vector-icons'; // Added Icons
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -58,7 +60,6 @@ export default function AuthScreen() {
 
       const batch = writeBatch(db);
 
-      // A. Create Parent Profile with Onboarding Flag
       const parentRef = doc(db, 'users', uid);
       batch.set(parentRef, {
         email: email.trim(),
@@ -66,11 +67,10 @@ export default function AuthScreen() {
         lastName: lastName.trim(),
         phone: phone.trim(),
         role: 'parent',
-        onboardingComplete: false, // <--- CRITICAL FLAG
+        onboardingComplete: false,
         createdAt: new Date()
       });
 
-      // B. Create First Child Profile
       const newChildRef = doc(collection(db, 'children')); 
       batch.set(newChildRef, {
         name: childName.trim(),
@@ -95,10 +95,15 @@ export default function AuthScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{flex: 1}}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
+          {/* 1. BRAND HEADER */}
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>BrightSteps</Text>
+            <Image 
+                source={require('../assets/splash.png')} 
+                style={styles.logo}
+                resizeMode="contain"
+            />
             <Text style={styles.headerSubtitle}>
-              {isLogin ? 'Welcome back! Please sign in.' : 'Create a profile to start tracking progress.'}
+              {isLogin ? 'Welcome back. Please sign in.' : 'Create a profile to start tracking progress.'}
             </Text>
           </View>
 
@@ -106,65 +111,92 @@ export default function AuthScreen() {
             <>
               <Text style={styles.sectionLabel}>YOUR DETAILS</Text>
               <View style={styles.inputGroup}>
-                <TextInput 
-                  style={styles.inputTop} 
-                  placeholder="First Name" 
-                  value={firstName} 
-                  onChangeText={setFirstName}
-                  placeholderTextColor={Colors.placeholder}
-                />
+                {/* First Name */}
+                <View style={styles.inputRow}>
+                    <Ionicons name="person-outline" size={20} color={Colors.textSecondary} style={styles.icon} />
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder="First Name" 
+                      value={firstName} 
+                      onChangeText={setFirstName}
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                </View>
                 <View style={styles.separator} />
-                <TextInput 
-                  style={styles.inputMiddle} 
-                  placeholder="Last Name" 
-                  value={lastName} 
-                  onChangeText={setLastName}
-                  placeholderTextColor={Colors.placeholder}
-                />
+                
+                {/* Last Name */}
+                <View style={styles.inputRow}>
+                    <Ionicons name="person-outline" size={20} color="transparent" style={styles.icon} /> 
+                    {/* Transparent icon to align text nicely */}
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder="Last Name" 
+                      value={lastName} 
+                      onChangeText={setLastName}
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                </View>
                 <View style={styles.separator} />
-                <TextInput 
-                  style={styles.inputBottom} 
-                  placeholder="Phone Number" 
-                  keyboardType="phone-pad"
-                  value={phone} 
-                  onChangeText={setPhone}
-                  placeholderTextColor={Colors.placeholder}
-                />
+                
+                {/* Phone */}
+                <View style={styles.inputRow}>
+                    <Ionicons name="call-outline" size={20} color={Colors.textSecondary} style={styles.icon} />
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder="Phone Number" 
+                      keyboardType="phone-pad"
+                      value={phone} 
+                      onChangeText={setPhone}
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                </View>
               </View>
 
               <Text style={styles.sectionLabel}>FIRST LEARNER</Text>
               <View style={styles.inputGroup}>
-                <TextInput 
-                  style={styles.inputSingle} 
-                  placeholder="Child's Name" 
-                  value={childName} 
-                  onChangeText={setChildName}
-                  placeholderTextColor={Colors.placeholder}
-                />
+                <View style={styles.inputRow}>
+                    <Ionicons name="school-outline" size={20} color={Colors.textSecondary} style={styles.icon} />
+                    <TextInput 
+                      style={styles.input} 
+                      placeholder="Child's Name" 
+                      value={childName} 
+                      onChangeText={setChildName}
+                      placeholderTextColor={Colors.placeholder}
+                    />
+                </View>
               </View>
             </>
           )}
 
           <Text style={styles.sectionLabel}>{isLogin ? 'ACCOUNT' : 'LOGIN DETAILS'}</Text>
           <View style={styles.inputGroup}>
-            <TextInput 
-              style={styles.inputTop} 
-              placeholder="Email Address" 
-              keyboardType="email-address" 
-              autoCapitalize="none"
-              value={email} 
-              onChangeText={setEmail}
-              placeholderTextColor={Colors.placeholder}
-            />
+            {/* Email */}
+            <View style={styles.inputRow}>
+                <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} style={styles.icon} />
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="Email Address" 
+                  keyboardType="email-address" 
+                  autoCapitalize="none"
+                  value={email} 
+                  onChangeText={setEmail}
+                  placeholderTextColor={Colors.placeholder}
+                />
+            </View>
             <View style={styles.separator} />
-            <TextInput 
-              style={styles.inputBottom}
-              placeholder="Password" 
-              secureTextEntry 
-              value={password} 
-              onChangeText={setPassword} 
-              placeholderTextColor={Colors.placeholder}
-            />
+            
+            {/* Password */}
+            <View style={styles.inputRow}>
+                <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.icon} />
+                <TextInput 
+                  style={styles.input} 
+                  placeholder="Password" 
+                  secureTextEntry 
+                  value={password} 
+                  onChangeText={setPassword} 
+                  placeholderTextColor={Colors.placeholder}
+                />
+            </View>
           </View>
 
           <TouchableOpacity 
@@ -187,6 +219,12 @@ export default function AuthScreen() {
             </Text>
           </TouchableOpacity>
 
+          {/* 3. TRUST FOOTER */}
+          <View style={styles.footer}>
+             <Ionicons name="shield-checkmark-outline" size={14} color={Colors.textSecondary} />
+             <Text style={styles.footerText}> Secure & Private Learning Environment</Text>
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -197,57 +235,51 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scrollContent: { padding: 20, paddingBottom: 50 },
   
-  headerContainer: { marginTop: 20, marginBottom: 30, alignItems: 'center' },
-  headerTitle: { fontSize: 34, fontWeight: '800', color: Colors.textPrimary, letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 16, color: Colors.textSecondary, marginTop: 8, textAlign: 'center' },
+  headerContainer: { marginTop: 40, marginBottom: 40, alignItems: 'center' },
+  logo: { width: 180, height: 60, marginBottom: 15 },
+  headerSubtitle: { fontSize: 16, color: Colors.textSecondary, marginTop: 5, textAlign: 'center' },
 
   sectionLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: Colors.textSecondary,
     marginBottom: 8,
     marginLeft: 16,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
   },
 
+  // Apple Settings Style Group
   inputGroup: {
     backgroundColor: Colors.card,
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)'
   },
-  inputTop: {
-    height: 50,
-    paddingHorizontal: 16,
+  
+  // Row with Icon
+  inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 50,
+      paddingHorizontal: 16,
+      backgroundColor: Colors.card,
+  },
+  icon: { marginRight: 12, width: 22, textAlign: 'center' },
+  
+  input: {
+    flex: 1,
     fontSize: 17,
     color: Colors.textPrimary,
-    backgroundColor: Colors.card,
+    height: '100%',
   },
-  inputMiddle: {
-    height: 50,
-    paddingHorizontal: 16,
-    fontSize: 17,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.card,
-  },
-  inputBottom: {
-    height: 50,
-    paddingHorizontal: 16,
-    fontSize: 17,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.card,
-  },
-  inputSingle: {
-    height: 50,
-    paddingHorizontal: 16,
-    fontSize: 17,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.card,
-  },
+  
   separator: {
     height: 1,
     backgroundColor: Colors.separator,
-    marginLeft: 16, 
+    marginLeft: 50, // Indent separator to align with text, not icon
   },
 
   primaryButton: {
@@ -258,7 +290,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
     marginTop: 10
@@ -269,5 +301,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   linkButton: { marginTop: 25, alignItems: 'center' },
-  linkText: { color: Colors.primary, fontSize: 16, fontWeight: '500' },
+  linkText: { color: Colors.primary, fontSize: 16, fontWeight: '600' },
+
+  footer: { 
+      marginTop: 40, 
+      flexDirection: 'row', 
+      justifyContent: 'center', 
+      alignItems: 'center',
+      opacity: 0.7 
+  },
+  footerText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '500' }
 });
